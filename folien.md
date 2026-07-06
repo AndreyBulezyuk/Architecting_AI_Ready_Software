@@ -25,3 +25,15 @@ src: ./tag-1/02-setup-lokal/theorie.md
 ---
 src: ./tag-1/03-setup-aws/theorie.md
 ---
+
+---
+src: ./tag-1/04-event-driven-ki-workloads/theorie.md
+---
+
+---
+src: ./tag-1/05-daten-zentrierte-persistenz/theorie.md
+---
+
+---
+src: ./tag-1/06-praxis-benutzerprofil/theorie.md
+---

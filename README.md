@@ -93,6 +93,8 @@ flowchart LR
 
 **Prinzip:** Lokal und AWS nutzen dieselben APIs ([boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) gegen LocalStack-Endpoint ↔ boto3 gegen AWS) — kein doppelter Code, nur andere Endpoints/Credentials. Alles Lokale startet über **eine** `docker-compose.yml` im Root: `neo4j`, `postgres` (pgvector), `localstack`, `langfuse` (+ deren Abhängigkeiten).
 
+**Rolle von LocalStack (bewusst begrenzt):** Warm-up vor dem AWS-Zugang (Kapitel 02), Substrat für schnelle pytest-Läufe und Offline-Fallback. Ab Kapitel 04 ist **echtes AWS der Primärweg** — LocalStack erzwingt kein IAM und kennt kein Bedrock; Rechte- und Policy-Fehler zeigen sich nur in der echten Cloud. Postgres und Neo4j sind davon unabhängig: die laufen lokal nativ im Container, ohne Emulation.
+
 ### Infrastructure as Code
 
 **Entscheidung: [AWS CDK v2](https://docs.aws.amazon.com/cdk/v2/guide/) in Python.**

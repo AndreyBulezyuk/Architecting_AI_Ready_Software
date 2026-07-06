@@ -26,6 +26,17 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 - [AWS-Zugang & erster Deploy](../tag-1/03-setup-aws/theorie.md) — `tag-1/03-setup-aws/theorie.md`
 - [Trainer-Runbook 03 — AWS live vorbereiten](../tag-1/03-setup-aws/trainer.md) — `tag-1/03-setup-aws/trainer.md`
 - [Übung 03 — Eigener Account, eigener Stack, erster LLM-Call](../tag-1/03-setup-aws/uebung.md) — `tag-1/03-setup-aws/uebung.md`
+- [Demo 04 — Event-Pipeline: Bus → Rule → Queue → Worker → DLQ](../tag-1/04-event-driven-ki-workloads/demo/README.md) — `tag-1/04-event-driven-ki-workloads/demo/README.md`
+- [Lösung 04](../tag-1/04-event-driven-ki-workloads/loesung/README.md) — `tag-1/04-event-driven-ki-workloads/loesung/README.md`
+- [Event-Driven Architecture für KI-Workloads](../tag-1/04-event-driven-ki-workloads/theorie.md) — `tag-1/04-event-driven-ki-workloads/theorie.md`
+- [Übung 04 — Zweiter Event-Typ, Routing und Idempotenz](../tag-1/04-event-driven-ki-workloads/uebung.md) — `tag-1/04-event-driven-ki-workloads/uebung.md`
+- [Demo 05 — Mini-Dokument-Store mit Embedding-Lifecycle](../tag-1/05-daten-zentrierte-persistenz/demo/README.md) — `tag-1/05-daten-zentrierte-persistenz/demo/README.md`
+- [Lösung 05](../tag-1/05-daten-zentrierte-persistenz/loesung/README.md) — `tag-1/05-daten-zentrierte-persistenz/loesung/README.md`
+- [Daten-zentrierte Architekturen & Persistenz](../tag-1/05-daten-zentrierte-persistenz/theorie.md) — `tag-1/05-daten-zentrierte-persistenz/theorie.md`
+- [Übung 05 — Event-getriebenes Re-Embedding + Index-Beweis](../tag-1/05-daten-zentrierte-persistenz/uebung.md) — `tag-1/05-daten-zentrierte-persistenz/uebung.md`
+- [Demo 06 — Referenz-Komponente im Schnelldurchlauf](../tag-1/06-praxis-benutzerprofil/demo/README.md) — `tag-1/06-praxis-benutzerprofil/demo/README.md`
+- [Praxis: Die Benutzerprofil-Komponente](../tag-1/06-praxis-benutzerprofil/theorie.md) — `tag-1/06-praxis-benutzerprofil/theorie.md`
+- [Übung 06 — Benutzerprofil-Komponente bauen (Tagesabschluss)](../tag-1/06-praxis-benutzerprofil/uebung.md) — `tag-1/06-praxis-benutzerprofil/uebung.md`
 - [Tag 1 — Event-Driven & daten-zentrierte Grundlagen](../tag-1/README.md) — `tag-1/README.md`
 
 ## Tag 2

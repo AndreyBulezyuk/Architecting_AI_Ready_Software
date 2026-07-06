@@ -6,6 +6,8 @@ requires-python = ">=3.12"
 dependencies = [
     "aws-cdk-lib>=2.170",
     "boto3>=1.35",
+    # CRT extra: required by the `aws login` credential provider (login_session profiles).
+    "botocore[crt]>=1.35",
     "constructs>=10.3",
 ]
 
