@@ -1,0 +1,32 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# AWS CDK
+cdk.out/
+cdk.context.json
+
+# Env & Secrets
+.env
+.env.*
+!.env.example
+
+# Docker / lokale Daten-Volumes
+volumes/
+*.db
+
+# LocalStack
+.localstack/
+
+# Node (Slidev, CDK CLI)
+node_modules/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+.claude

@@ -1,0 +1,8 @@
+{
+  "app": "uv run python app.py",
+  "profile": "ai-training",
+  "tags": {
+    "Project": "ai-training",
+    "Owner": "ai-training"
+  }
+}

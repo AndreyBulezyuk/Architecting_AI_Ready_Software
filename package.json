@@ -1,0 +1,15 @@
+{
+  "name": "ai-ready-training",
+  "private": true,
+  "description": "Tooling for slides (Slidev) and IaC (AWS CDK CLI) — application code lives in per-chapter uv projects",
+  "scripts": {
+    "deck": "slidev folien.md --open",
+    "slides": "slidev",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^52.1.0",
+    "@slidev/theme-default": "^0.25.0",
+    "aws-cdk": "^2.1100.0"
+  }
+}
