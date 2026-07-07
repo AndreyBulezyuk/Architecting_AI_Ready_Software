@@ -37,3 +37,11 @@ src: ./tag-1/05-daten-zentrierte-persistenz/theorie.md
 ---
 src: ./tag-1/06-praxis-benutzerprofil/theorie.md
 ---
+
+---
+src: ./tag-2/01-genai-anwendungsarchitektur/theorie.md
+---
+
+---
+src: ./tag-2/02-dokumentenpipeline-embeddings/theorie.md
+---

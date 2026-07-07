@@ -41,6 +41,14 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 
 ## Tag 2
 
+- [Demo T2/01 — Converse-Basics & strukturierte Outputs](../tag-2/01-genai-anwendungsarchitektur/demo/README.md) — `tag-2/01-genai-anwendungsarchitektur/demo/README.md`
+- [Lösung T2/01](../tag-2/01-genai-anwendungsarchitektur/loesung/README.md) — `tag-2/01-genai-anwendungsarchitektur/loesung/README.md`
+- [Architektur von GenAI-Anwendungen](../tag-2/01-genai-anwendungsarchitektur/theorie.md) — `tag-2/01-genai-anwendungsarchitektur/theorie.md`
+- [Übung T2/01 — Model-Router mit Kosten-Messung & eigener Output-Vertrag](../tag-2/01-genai-anwendungsarchitektur/uebung.md) — `tag-2/01-genai-anwendungsarchitektur/uebung.md`
+- [Demo T2/02 — Echte Embeddings auf dem bekannten Store](../tag-2/02-dokumentenpipeline-embeddings/demo/README.md) — `tag-2/02-dokumentenpipeline-embeddings/demo/README.md`
+- [Lösung T2/02](../tag-2/02-dokumentenpipeline-embeddings/loesung/README.md) — `tag-2/02-dokumentenpipeline-embeddings/loesung/README.md`
+- [Dokumentenpipeline & Embeddings](../tag-2/02-dokumentenpipeline-embeddings/theorie.md) — `tag-2/02-dokumentenpipeline-embeddings/theorie.md`
+- [Übung T2/02 — Chunking messen & die RAG-Baseline fertigbauen](../tag-2/02-dokumentenpipeline-embeddings/uebung.md) — `tag-2/02-dokumentenpipeline-embeddings/uebung.md`
 - [Tag 2 — GraphRAG & KI-zentrierte Services](../tag-2/README.md) — `tag-2/README.md`
 
 ## Tag 3

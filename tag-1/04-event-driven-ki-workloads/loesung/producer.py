@@ -18,7 +18,7 @@ def publish(event: BookingCreated) -> None:
 
 
 if __name__ == "__main__":
-    evt = BookingCreated(user_id="user-42", destination="Lisbon", price_eur=499.0)
+    evt = BookingCreated(user_id="user-46", destination="Lisbon", price_eur=499.0)
     publish(evt)
     publish(evt)  # same event_id twice -> worker must process it exactly once
     print(f"published {evt.event_id} twice")

@@ -5,6 +5,7 @@ description = "Solution tag-1/04: second event type with own route + idempotent 
 requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.35",
+    "botocore[crt]>=1.35",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
 ]

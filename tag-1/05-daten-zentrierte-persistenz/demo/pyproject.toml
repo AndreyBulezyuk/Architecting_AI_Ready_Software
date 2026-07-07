@@ -5,6 +5,7 @@ description = "Demo tag-1/05: S3 raw text + Postgres/pgvector with a full embedd
 requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.35",
+    "botocore[crt]>=1.35",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.6",
 ]

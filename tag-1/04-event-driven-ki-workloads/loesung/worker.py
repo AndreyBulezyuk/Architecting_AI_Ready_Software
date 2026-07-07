@@ -18,7 +18,7 @@ def claim_event(event: BookingCreated) -> bool:
     try:
         dynamodb.put_item(
             TableName=settings.dedup_table_name,
-            Item={"event_id": {"S": str(event.event_id)}},
+            Item={"event_id": {"S": str(event.event_id)}, "user_id": {"S": str(event.user_id)}},
             ConditionExpression="attribute_not_exists(event_id)",
         )
     except dynamodb.exceptions.ConditionalCheckFailedException:
@@ -52,9 +52,11 @@ def poll_once(queue_url: str) -> tuple[int, int, int]:
             continue
 
         if claim_event(event):
+            # Will continue here if DynamoDB Table doesn't have the event_id yet (first time processing this event)
             handle_event(event)
             processed += 1
         else:
+            # We see an event with that id in dynamoDB already, so we have already processed it. This is a duplicate.
             print(f"duplicate {event.event_id}, skipping")
             duplicates += 1
         # in both cases the message leaves the queue — the work is accounted for

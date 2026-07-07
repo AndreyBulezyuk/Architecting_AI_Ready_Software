@@ -15,7 +15,7 @@ from models import SearchSubmitted
 
 def handle_event(event: SearchSubmitted) -> None:
     # placeholder business logic; chapter 06 turns this into real profile updates
-    print(f"profile update for {event.user_id}: searched {event.query!r}")
+    print(f"Processing Event {event.event_id}: profile update for {event.user_id}: searched {event.query!r}")
 
 
 def poll_once(queue_url: str) -> tuple[int, int]:

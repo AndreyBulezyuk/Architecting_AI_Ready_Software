@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 
 
 class PipelineSettings(BaseSettings):
-    aws_endpoint_url: str | None = None  # None -> real AWS
+    aws_endpoint_url: str | None = "http://localhost:4566" #  None  # None -> real AWS
     aws_region: str = "eu-west-1"
 
-    bus_name: str = "t04-demo-bus"
-    queue_name: str = "t04-demo-profile-events"
-    dlq_name: str = "t04-demo-profile-events-dlq"
+    bus_name: str = "t04-demo-bus2"
+    queue_name: str = "t04-demo-profile-events2"
+    dlq_name: str = "t04-demo-profile-events-dlq2"
     max_receive_count: int = 2
     visibility_timeout_seconds: int = 5
 

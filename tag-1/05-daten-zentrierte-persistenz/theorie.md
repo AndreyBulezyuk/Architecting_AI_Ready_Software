@@ -82,7 +82,7 @@ CREATE TABLE documents (id text PRIMARY KEY, title text,
                         embedding vector(1024), embedding_stale boolean);
 CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
 SELECT id, title FROM documents WHERE NOT embedding_stale
-ORDER BY embedding <=> $1 LIMIT 5;   -- <=> Cosine, <-> L2, <#> Inner Product
+ORDER BY embedding <=> $1 LIMIT 5;   -- <=> Cosine, <-> L2, <#> negatives Inner Product
 ```
 
 | Index | Eigenschaft |
