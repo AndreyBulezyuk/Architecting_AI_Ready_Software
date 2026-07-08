@@ -1,19 +1,31 @@
-"""Solution tests: event-driven lifecycle (part 2) and EXPLAIN index proof (part 3)."""
+"""Solution tests: event-driven lifecycle (part 2) and vector-index proof (part 3).
 
-import psycopg
+Needs local Neo4j (docker compose up -d) + AWS credentials (S3/SQS) — skipped otherwise.
+Queue and bucket stay after the run: uv run python cleanup.py
+"""
+
+import botocore.exceptions
+import pytest
 import store
 import worker
-from config import settings, sqs_client
-from embeddings import embed, to_pgvector
-from psycopg import sql
+from config import s3_client, settings, sqs_client
 
-TABLE = sql.Identifier(settings.table_name)
+
+def _aws_available() -> bool:
+    try:
+        s3_client()
+        return True
+    except botocore.exceptions.BotoCoreError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(not _aws_available(), reason="AWS credentials required")
 
 
 def reset() -> str:
     queue_url = store.init_schema()
-    with psycopg.connect(settings.postgres_dsn, autocommit=True) as conn:
-        conn.execute(sql.SQL("DELETE FROM {table}").format(table=TABLE))
+    with store.driver() as neo4j:
+        neo4j.execute_query("MATCH (d:UebDocument) DETACH DELETE d")
     sqs = sqs_client()
     while messages := sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10).get(
         "Messages"
@@ -26,7 +38,7 @@ def reset() -> str:
 
 
 def process_all(queue_url: str) -> None:
-    for _ in range(5):
+    for _ in range(8):
         if worker.poll_once(queue_url) == 0:
             return
 
@@ -47,20 +59,21 @@ def test_event_driven_reembed_lifecycle() -> None:
     assert store.search("welpe hund", k=3)[0][0] == "d1"
 
 
-def test_explain_uses_hnsw_index_when_seqscan_disabled() -> None:
+def test_vector_index_is_online_and_answers_topk() -> None:
     queue_url = reset()
-    for i in range(200):
+    for i in range(30):
         store.upsert_document(f"doc-{i}", f"Doc {i}", f"wort{i} inhalt beispiel text{i % 7}")
     process_all(queue_url)
 
-    with psycopg.connect(settings.postgres_dsn) as conn:
-        # small tables legitimately favour a Seq Scan — disable it to prove the index works
-        conn.execute("SET enable_seqscan = off")
-        plan_rows = conn.execute(
-            sql.SQL(
-                "EXPLAIN SELECT id FROM {table} ORDER BY embedding <=> %s::vector LIMIT 5"
-            ).format(table=TABLE),
-            (to_pgvector(embed("beispiel inhalt")),),
-        ).fetchall()
-    plan = "\n".join(row[0] for row in plan_rows)
-    assert f"Index Scan using {settings.table_name}_embedding_hnsw" in plan
+    with store.driver() as neo4j:
+        records = neo4j.execute_query(
+            "SHOW VECTOR INDEXES YIELD name, state, populationPercent "
+            "WHERE name = $name RETURN state, populationPercent",
+            name=settings.vector_index_name,
+        ).records
+    assert records, "vector index does not exist"
+    assert records[0]["state"] == "ONLINE"
+    assert records[0]["populationPercent"] == 100.0
+
+    hits = store.search("beispiel inhalt", k=5)
+    assert len(hits) == 5  # the index answers top-k over the 30 embedded documents

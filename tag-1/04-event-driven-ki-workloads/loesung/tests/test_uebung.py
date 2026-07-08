@@ -1,13 +1,14 @@
-"""Solution tests against LocalStack: routing filter + idempotency."""
+"""Solution tests against the participant's AWS account: routing filter + idempotency.
+
+Resources stay after the run — remove them with:  uv run python cleanup.py
+"""
 
 # ruff: noqa: E402  (env vars must be set before the config module is imported)
 
 import os
 import uuid
 
-os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
-os.environ.setdefault("AWS_ACCESS_KEY_ID", "test")
-os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
+os.environ.setdefault("AWS_PROFILE", "ai-training")
 os.environ["VISIBILITY_TIMEOUT_SECONDS"] = "1"
 
 import infra

@@ -24,7 +24,7 @@ Offizielle Agenda: [docs/agenda.md](docs/agenda.md) · **Alle Dokumente: [docs/i
 flowchart LR
     subgraph T1[Tag 1 — Fundament]
         A[Events\nEventBridge/SQS] --> B[Benutzerprofil-\nKomponente]
-        B --> C[(Postgres\n+ pgvector)]
+        B --> C[(DynamoDB\nProfile)]
     end
     subgraph T2[Tag 2 — GraphRAG & Agenten]
         D[Dokumenten-\npipeline] --> E[(Neo4j\nKnowledge Graph)]
@@ -73,7 +73,7 @@ flowchart LR
 | LLM & Embeddings | **[Amazon Bedrock](https://docs.aws.amazon.com/bedrock/)** (Claude-Modelle; Titan/Cohere Embeddings) | OpenAI/Azure OpenAI, selbst gehostete Modelle |
 | Agent-Framework | **[Strands Agents SDK](https://strandsagents.com/docs/)** (AWS, Open Source, model-agnostisch; Repo: [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk)) | [LangGraph](https://langchain-ai.github.io/langgraph/), [LlamaIndex](https://docs.llamaindex.ai/), [CrewAI](https://docs.crewai.com/) |
 | Agent-Runtime (Prod) | **[Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)** (Runtime, Memory, Gateway, Observability) | Eigenes ECS/Lambda-Deployment |
-| RAG-Ansatz | **GraphRAG**: [Neo4j](https://neo4j.com/docs/) Knowledge Graph + [nativer Vector Index](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/), Paket [`neo4j-graphrag`](https://neo4j.com/docs/neo4j-graphrag-python/current/) | Vector-only-RAG (wird als Baseline gebaut und per Ragas verglichen), [Microsoft GraphRAG](https://microsoft.github.io/graphrag/), [LightRAG](https://github.com/HKUDS/LightRAG) |
+| RAG-Ansatz | **GraphRAG**: [Neo4j](https://neo4j.com/docs/) Knowledge Graph + [nativer Vector Index](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/), Paket [`neo4j-graphrag`](https://neo4j.com/docs/neo4j-graphrag-python/current/) — auch die Vector-RAG-Baseline läuft auf dem Neo4j Vector Index (eine DB für Vektor **und** Graph) | [Bedrock Knowledge Bases](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html) (verworfen: Standard-Vektorstore OpenSearch Serverless hat Stundengrundkosten; GraphRAG-Variante braucht Neptune Analytics; Blackbox statt Lerneffekt), [Microsoft GraphRAG](https://microsoft.github.io/graphrag/), [LightRAG](https://github.com/HKUDS/LightRAG) |
 | Tool-Anbindung | **[MCP](https://modelcontextprotocol.io/)** (Model Context Protocol) | Direkte Tool-Definitionen im Framework |
 | Evaluation | **[Ragas](https://docs.ragas.io/)** (+ LLM-as-Judge) | [DeepEval](https://deepeval.com/docs/getting-started) |
 | LLM-Observability | **[OpenTelemetry GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)** → **[Langfuse](https://langfuse.com/docs)** (self-hosted) | [LangSmith](https://docs.langchain.com/langsmith/), [Phoenix/Arize](https://arize.com/docs/phoenix), [MLflow Tracing](https://mlflow.org/docs/latest/genai/tracing/) |
@@ -82,16 +82,17 @@ flowchart LR
 
 ### Daten & Events
 
-| Bereich | Lokal ([Docker Compose](https://docs.docker.com/compose/)) | AWS |
+| Bereich | Wo läuft es | Details |
 |---|---|---|
-| Knowledge Graph + Vektoren | [Neo4j Community](https://neo4j.com/docs/operations-manual/current/docker/) (Container) | Neo4j-Container auf [EC2](https://docs.aws.amazon.com/ec2/) — gleiche Compose-Konfiguration wie lokal. Das native Pendant [Amazon Neptune](https://docs.aws.amazon.com/neptune/) ist für Schulungszwecke zu teuer (min. ~2,60 $/Tag pro Instanz serverless, kein Cypher-Standard) — bewusster Theorie-/Kosten-Punkt |
-| Relational + Vektoren | [PostgreSQL](https://www.postgresql.org/docs/) + [pgvector](https://github.com/pgvector/pgvector) (Container) | [Aurora PostgreSQL / RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.VectorDB.html) mit pgvector |
-| Key-Value / Profile | DynamoDB (via LocalStack) | [DynamoDB](https://docs.aws.amazon.com/dynamodb/) |
-| Objekte / Dokumente | S3 (via LocalStack) | [S3](https://docs.aws.amazon.com/s3/) |
-| Events / Messaging | EventBridge, SQS, SNS (via LocalStack) | [EventBridge](https://docs.aws.amazon.com/eventbridge/), [SQS](https://docs.aws.amazon.com/sqs/), [SNS](https://docs.aws.amazon.com/sns/) |
-| Serverless Compute | Lambda (via [LocalStack](https://docs.localstack.cloud/)) | [Lambda](https://docs.aws.amazon.com/lambda/) |
+| Knowledge Graph **+ alle Vektoren** | [Neo4j Community](https://neo4j.com/docs/operations-manual/current/docker/) im Docker-Container: lokal via Compose, deployt auf [EC2](https://docs.aws.amazon.com/ec2/) (Tag 2/3, gleiche Konfig) | Eine DB für Graph **und** [Vector Index](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/) — bewusst kein pgvector/Postgres mehr (weniger Tool-Vielfalt). Das native Pendant [Amazon Neptune](https://docs.aws.amazon.com/neptune/) ist zu teuer und ohne Standard-Cypher — Theorie-/Kosten-Punkt |
+| Key-Value: Profile, Signale | [DynamoDB](https://docs.aws.amazon.com/dynamodb/) (AWS direkt, on-demand) | pro Request abgerechnet, kein Leerlaufpreis |
+| Objekte / Dokumente | [S3](https://docs.aws.amazon.com/s3/) (AWS direkt) | |
+| Events / Messaging | [EventBridge](https://docs.aws.amazon.com/eventbridge/), [SQS](https://docs.aws.amazon.com/sqs/), [SNS](https://docs.aws.amazon.com/sns/) (AWS direkt) | |
+| Serverless Compute | [Lambda](https://docs.aws.amazon.com/lambda/) (AWS direkt) | |
 
-**Prinzip:** Lokal und AWS nutzen dieselben APIs ([boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) gegen LocalStack-Endpoint ↔ boto3 gegen AWS) — kein doppelter Code, nur andere Endpoints/Credentials. Alles Lokale startet über **eine** `docker-compose.yml` im Root: `neo4j`, `postgres` (pgvector), `localstack`, `langfuse` (+ deren Abhängigkeiten).
+**AWS-first-Prinzip (seit 07/2026):** Übungen, Demos und Tests laufen direkt gegen den eigenen AWS-Sandbox-Account — kein Umgebungs-Hin-und-Her. [LocalStack](https://docs.localstack.cloud/) wird in `tag-1/02` einmal als Option gezeigt (Compose-Profil `emulation`), danach nicht mehr verwendet. Lokal läuft nur noch, was kein AWS-Pendant im Einsatz hat: `neo4j` (Kern) und `langfuse` (Profil `observability`).
+
+**Kosten:** Alle Standard-Services sind nutzungsbasiert (3 Tage ≈ einstelliger Euro-Betrag pro Teilnehmer, größter Posten Bedrock-Tokens). Einzige Stundenpreis-Ressource ist die Neo4j-EC2-Instanz (~0,50 $/Tag) — **nach jedem Schulungstag zerstören**; Kostenfallen-Liste im [Kosten-Radar](tag-1/03-setup-aws/trainer.md).
 
 **Rolle von LocalStack (bewusst begrenzt):** Warm-up vor dem AWS-Zugang (Kapitel 02), Substrat für schnelle pytest-Läufe und Offline-Fallback. Ab Kapitel 04 ist **echtes AWS der Primärweg** — LocalStack erzwingt kein IAM und kennt kein Bedrock; Rechte- und Policy-Fehler zeigen sich nur in der echten Cloud. Postgres und Neo4j sind davon unabhängig: die laufen lokal nativ im Container, ohne Emulation.
 

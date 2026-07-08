@@ -1,14 +1,20 @@
-"""Chunk store on pgvector — table and chunk parameters are injectable so the
-chunking experiment (part 2) can ingest the same corpus into two tables."""
+"""Chunk store on the Neo4j vector index — label and chunk parameters are injectable
+so the chunking experiment (part 2) can ingest the same corpus twice.
+
+One vector index per label+property: each experiment configuration gets its own label
+(and thus its own index), e.g. UebChunk vs UebChunkTiny.
+"""
 
 from dataclasses import dataclass
+from typing import LiteralString, cast
 
-import psycopg
-from psycopg import sql
+from neo4j import Driver, GraphDatabase
 
 from chunking import chunk_text
 from config import settings
-from embeddings import embed_documents, embed_query, to_pgvector
+from embeddings import embed_documents, embed_query
+
+DEFAULT_LABEL = "UebChunk"
 
 
 @dataclass
@@ -16,83 +22,84 @@ class Hit:
     doc_id: str
     seq: int
     text: str
-    distance: float
+    score: float  # similarity: higher = closer
 
 
-def connect() -> psycopg.Connection:
-    return psycopg.connect(settings.postgres_dsn, autocommit=True)
+def driver() -> Driver:
+    return GraphDatabase.driver(  # pyright: ignore[reportUnknownMemberType]
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    )
 
 
-def init_schema(table_name: str | None = None) -> None:
-    name = table_name or settings.table_name
-    table = sql.Identifier(name)
-    with connect() as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        conn.execute(
-            sql.SQL(
-                """
-                CREATE TABLE IF NOT EXISTS {table} (
-                    doc_id text NOT NULL,
-                    seq int NOT NULL,
-                    text text NOT NULL,
-                    embedding vector({dimensions}) NOT NULL,
-                    embedding_model text NOT NULL,
-                    PRIMARY KEY (doc_id, seq)
-                )
-                """
-            ).format(table=table, dimensions=sql.Literal(settings.embedding_dimensions))
+def _index_name(label: str) -> str:
+    return f"{label.lower()}_embeddings"
+
+
+def init_schema(label: str = DEFAULT_LABEL) -> None:
+    with driver() as neo4j:
+        ddl = (
+            f"CREATE VECTOR INDEX {_index_name(label)} IF NOT EXISTS "
+            f"FOR (c:{label}) ON (c.embedding) "
+            f"OPTIONS {{indexConfig: {{`vector.dimensions`: {settings.embedding_dimensions}, "
+            "`vector.similarity_function`: 'cosine'}}"
         )
-        conn.execute(
-            sql.SQL(
-                "CREATE INDEX IF NOT EXISTS {index} ON {table} "
-                "USING hnsw (embedding vector_cosine_ops)"
-            ).format(index=sql.Identifier(f"{name}_hnsw"), table=table)
-        )
+        neo4j.execute_query(cast(LiteralString, ddl))
+        neo4j.execute_query("CALL db.awaitIndexes(60)")
 
 
 def ingest_document(
     doc_id: str,
     text: str,
     *,
-    table_name: str | None = None,
+    label: str = DEFAULT_LABEL,
     max_chars: int | None = None,
     overlap_chars: int | None = None,
 ) -> int:
-    table = sql.Identifier(table_name or settings.table_name)
     chunks = chunk_text(
         text,
         max_chars if max_chars is not None else settings.chunk_max_chars,
         overlap_chars if overlap_chars is not None else settings.chunk_overlap_chars,
     )
     vectors = embed_documents(chunks)
-    with connect() as conn:
-        conn.execute(
-            sql.SQL("DELETE FROM {table} WHERE doc_id = %s").format(table=table), (doc_id,)
+    with driver() as neo4j:
+        neo4j.execute_query(
+            cast(LiteralString, f"MATCH (c:{label} {{doc_id: $doc_id}}) DETACH DELETE c"),
+            doc_id=doc_id,
         )
-        for seq, (chunk, vector) in enumerate(zip(chunks, vectors, strict=True)):
-            conn.execute(
-                sql.SQL(
-                    "INSERT INTO {table} (doc_id, seq, text, embedding, embedding_model) "
-                    "VALUES (%s, %s, %s, %s, %s)"
-                ).format(table=table),
-                (doc_id, seq, chunk, to_pgvector(vector), settings.embedding_model_id),
-            )
+        neo4j.execute_query(
+            cast(
+                LiteralString,
+                "UNWIND $rows AS row "
+                f"CREATE (:{label} {{doc_id: row.doc_id, seq: row.seq, text: row.text, "
+                "embedding: row.embedding, embedding_model: row.model})",
+            ),
+            rows=[
+                {
+                    "doc_id": doc_id,
+                    "seq": seq,
+                    "text": chunk,
+                    "embedding": vector,
+                    "model": settings.embedding_model_id,
+                }
+                for seq, (chunk, vector) in enumerate(zip(chunks, vectors, strict=True))
+            ],
+        )
+        neo4j.execute_query("CALL db.awaitIndexes(60)")
     return len(chunks)
 
 
-def search(query: str, k: int = 3, *, table_name: str | None = None) -> list[Hit]:
-    table = sql.Identifier(table_name or settings.table_name)
-    query_vector = to_pgvector(embed_query(query))
-    with connect() as conn:
-        rows = conn.execute(
-            sql.SQL(
-                """
-                SELECT doc_id, seq, text, embedding <=> %s::vector AS distance
-                  FROM {table}
-                 ORDER BY distance
-                 LIMIT %s
-                """
-            ).format(table=table),
-            (query_vector, k),
-        ).fetchall()
-    return [Hit(row[0], row[1], row[2], float(row[3])) for row in rows]
+def search(query: str, k: int = 3, *, label: str = DEFAULT_LABEL) -> list[Hit]:
+    query_vector = embed_query(query)
+    with driver() as neo4j:
+        records = neo4j.execute_query(
+            cast(
+                LiteralString,
+                f"CALL db.index.vector.queryNodes('{_index_name(label)}', $k, $query) "
+                "YIELD node, score "
+                "RETURN node.doc_id AS doc_id, node.seq AS seq, node.text AS text, score "
+                "ORDER BY score DESC",
+            ),
+            k=k,
+            query=query_vector,
+        ).records
+    return [Hit(r["doc_id"], r["seq"], r["text"], float(r["score"])) for r in records]

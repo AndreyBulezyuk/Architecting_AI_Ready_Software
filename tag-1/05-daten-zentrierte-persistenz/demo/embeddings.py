@@ -21,8 +21,3 @@ def embed(text: str) -> list[float]:
         vector[bucket] += 1.0
     norm = math.sqrt(sum(component * component for component in vector)) or 1.0
     return [component / norm for component in vector]
-
-
-def to_pgvector(vector: list[float]) -> str:
-    """pgvector literal format: '[0.1, 0.2, ...]'."""
-    return "[" + ", ".join(f"{component:.6f}" for component in vector) + "]"

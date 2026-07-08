@@ -25,11 +25,11 @@ class EvalResult:
 
 
 def hit_rate_at_k(
-    questions: list[tuple[str, str]], k: int = 3, *, table_name: str | None = None
+    questions: list[tuple[str, str]], k: int = 3, *, label: str = store.DEFAULT_LABEL
 ) -> EvalResult:
     hits = 0
     for question, expected_doc in questions:
-        found = {hit.doc_id for hit in store.search(question, k=k, table_name=table_name)}
+        found = {hit.doc_id for hit in store.search(question, k=k, label=label)}
         if expected_doc in found:
             hits += 1
     return EvalResult(hits=hits, total=len(questions))

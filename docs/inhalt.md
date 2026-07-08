@@ -35,6 +35,7 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 - [Daten-zentrierte Architekturen & Persistenz](../tag-1/05-daten-zentrierte-persistenz/theorie.md) — `tag-1/05-daten-zentrierte-persistenz/theorie.md`
 - [Übung 05 — Event-getriebenes Re-Embedding + Index-Beweis](../tag-1/05-daten-zentrierte-persistenz/uebung.md) — `tag-1/05-daten-zentrierte-persistenz/uebung.md`
 - [Demo 06 — Referenz-Komponente im Schnelldurchlauf](../tag-1/06-praxis-benutzerprofil/demo/README.md) — `tag-1/06-praxis-benutzerprofil/demo/README.md`
+- [Lösung 06](../tag-1/06-praxis-benutzerprofil/loesung/README.md) — `tag-1/06-praxis-benutzerprofil/loesung/README.md`
 - [Praxis: Die Benutzerprofil-Komponente](../tag-1/06-praxis-benutzerprofil/theorie.md) — `tag-1/06-praxis-benutzerprofil/theorie.md`
 - [Übung 06 — Benutzerprofil-Komponente bauen (Tagesabschluss)](../tag-1/06-praxis-benutzerprofil/uebung.md) — `tag-1/06-praxis-benutzerprofil/uebung.md`
 - [Tag 1 — Event-Driven & daten-zentrierte Grundlagen](../tag-1/README.md) — `tag-1/README.md`

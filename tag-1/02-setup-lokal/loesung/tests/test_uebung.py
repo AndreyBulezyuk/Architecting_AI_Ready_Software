@@ -1,4 +1,4 @@
-"""Solution for exercise 02: one test per task (A: DynamoDB, B: pgvector, C: Neo4j)."""
+"""Solution for exercise 02: A DynamoDB (LocalStack), B Neo4j vector index, C Neo4j graph."""
 
 # boto3.client()/neo4j driver expose partially-untyped members; results are annotated instead
 # pyright: reportUnknownMemberType=false
@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import boto3
-import psycopg
 from neo4j import GraphDatabase
 
 if TYPE_CHECKING:
@@ -56,24 +55,37 @@ def test_a_dynamodb_user_profile_roundtrip() -> None:
     assert [v.get("S") for v in interests] == ["graphs", "events"]
 
 
-def test_b_pgvector_similarity_search() -> None:
-    with psycopg.connect(settings.postgres_dsn, autocommit=True) as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        conn.execute("DROP TABLE IF EXISTS snippets")
-        conn.execute("CREATE TABLE snippets (id serial PRIMARY KEY, text text, embedding vector(4))")
-        conn.execute(
-            "INSERT INTO snippets (text, embedding) VALUES "
-            "('dog',    '[1, 0, 0, 0]'),"
-            "('puppy',  '[0.9, 0.1, 0, 0]'),"
-            "('car',    '[0, 0, 1, 0]'),"
-            "('banana', '[0, 0, 0, 1]'),"
-            "('wolf',   '[0.8, 0.2, 0, 0]')"
+def test_b_neo4j_vector_similarity_search() -> None:
+    with GraphDatabase.driver(
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    ) as driver:
+        driver.execute_query(
+            "CREATE VECTOR INDEX snippets_embedding IF NOT EXISTS "
+            "FOR (s:Snippet) ON (s.embedding) "
+            "OPTIONS {indexConfig: {`vector.dimensions`: 4, "
+            "`vector.similarity_function`: 'cosine'}}"
         )
-        # <=> is cosine distance (lower = more similar); <-> would be L2 distance
-        rows = conn.execute(
-            "SELECT text FROM snippets ORDER BY embedding <=> '[1, 0.05, 0, 0]' LIMIT 2"
-        ).fetchall()
-        assert [r[0] for r in rows] == ["dog", "puppy"]
+        driver.execute_query("MATCH (s:Snippet) DETACH DELETE s")
+        driver.execute_query(
+            """
+            UNWIND [
+                {text: 'dog',    embedding: [1.0, 0.0, 0.0, 0.0]},
+                {text: 'puppy',  embedding: [0.9, 0.1, 0.0, 0.0]},
+                {text: 'car',    embedding: [0.0, 0.0, 1.0, 0.0]},
+                {text: 'banana', embedding: [0.0, 0.0, 0.0, 1.0]},
+                {text: 'wolf',   embedding: [0.8, 0.2, 0.0, 0.0]}
+            ] AS row
+            CREATE (:Snippet {text: row.text, embedding: row.embedding})
+            """
+        )
+        # the vector index populates asynchronously — wait before the first query
+        driver.execute_query("CALL db.awaitIndexes(60)")
+        records = driver.execute_query(
+            "CALL db.index.vector.queryNodes('snippets_embedding', 2, $query) "
+            "YIELD node, score RETURN node.text AS text ORDER BY score DESC",
+            query=[1.0, 0.05, 0.0, 0.0],
+        ).records
+        assert [record["text"] for record in records] == ["dog", "puppy"]
 
 
 def test_c_neo4j_knows_relationship() -> None:
@@ -87,4 +99,4 @@ def test_c_neo4j_knows_relationship() -> None:
         records = driver.execute_query(
             "MATCH (:Person {name: 'Ada'})-[:KNOWS]->(friend:Person) RETURN friend.name AS name"
         ).records
-        assert [r["name"] for r in records] == ["Grace"]
+        assert [record["name"] for record in records] == ["Grace"]

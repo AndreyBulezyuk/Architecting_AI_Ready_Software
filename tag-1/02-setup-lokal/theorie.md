@@ -50,22 +50,25 @@ Betonen: kein pip, kein poetry, kein conda in dieser Schulung. uv-Befehle, die h
 ```mermaid
 flowchart LR
     subgraph DC[docker-compose.yml — Root]
-        N[(Neo4j\n7474/7687)]
-        P[(Postgres + pgvector\n5432)]
-        L[LocalStack\n4566: S3, SQS, SNS,\nEventBridge, Lambda, DynamoDB]
-        LF[Langfuse\n3000 — Profil observability,\nerst Tag 3]
+        N[(Neo4j 7474/7687\nGraph + Vector Index)]
+        L[LocalStack 4566\nProfil emulation —\nnur dieses Kapitel]
+        LF[Langfuse 3000\nProfil observability —\nerst Tag 3]
     end
     DEV[uv-Projekt\npytest / FastAPI] --> N
-    DEV --> P
     DEV --> L
-    style L fill:#fdf2e9,stroke:#e67e22
+    DEV -->|ab Kapitel 03| AWS[AWS eu-west-1\nS3, SQS, DynamoDB,\nEventBridge, Bedrock]
+    style L fill:#eee,stroke:#999
     style LF fill:#eee,stroke:#999
+    style AWS fill:#fdf2e9,stroke:#e67e22
 ```
 
 ```bash
-docker compose up -d                              # Kernservices
+docker compose up -d                              # Kern: Neo4j
+docker compose --profile emulation up -d          # + LocalStack (nur Kapitel 02)
 docker compose --profile observability up -d      # + Langfuse (Tag 3)
 ```
+
+**Kursentscheidung:** Ab Kapitel 03 läuft alles Weitere **direkt gegen AWS** — LocalStack lernt ihr heute als Option kennen, danach kein Umgebungs-Hin-und-Her mehr.
 
 <!--
 Tag 1 · Kapitel 02 · Folie 3/4 (Der lokale Stack)
@@ -78,6 +81,8 @@ Auf das Profil hinweisen — bewusste Entscheidung, damit Tag 1 nicht 10 Contain
 # Was LocalStack kann — und was nicht
 
 ###### tag-1/02-setup-lokal · Tag 1 · Kapitel 02
+
+**Einordnung:** LocalStack ist eine legitime Option für Offline-Entwicklung und CI — wir zeigen es genau **einmal** (heute) und arbeiten ab Kapitel 03 direkt gegen AWS, weil der Wechsel zwischen zwei Umgebungen mehr Komplexität kostet, als die Emulation spart.
 
 **Funktioniert (Community-Edition, unser Umfang):** S3, SQS, SNS, EventBridge (Rules/Targets), DynamoDB, Lambda, SSM — die APIs verhalten sich für unsere Zwecke wie AWS.
 

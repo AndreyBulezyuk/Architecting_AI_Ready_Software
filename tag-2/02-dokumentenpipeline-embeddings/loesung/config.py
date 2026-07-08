@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 
 class RagSettings(BaseSettings):
-    postgres_dsn: str = "postgresql://postgres:trainingpass@localhost:5432/aiready"
-    table_name: str = "t202_ueb_chunks"
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "trainingpass"
 
     aws_region: str = "eu-west-1"
     embedding_model_id: str = "cohere.embed-multilingual-v3"

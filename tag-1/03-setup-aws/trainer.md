@@ -60,7 +60,28 @@ aws sts assume-role --role-arn arn:aws:iam::<ACCOUNT_ID>:role/OrganizationAccoun
 - **Fallback**, wenn Organizations klemmt: ein gemeinsamer Sandbox-Account, pro Teilnehmer ein Identity-Center-User + eigener Ressourcen-Prefix. Verliert Kosten-Isolation, rettet aber den Tag.
 - Teilnehmer ohne MFA-Gerät: TOTP-App reicht (kein Hardware-Key nötig).
 
-## D. Nach der Schulung (Aufräumen)
+## D. Kosten-Radar (was kann Geld kosten?)
+
+Alles, was die Schulung standardmäßig nutzt, ist **nutzungsbasiert** und bleibt pro Teilnehmer für 3 Tage im einstelligen Euro-Bereich:
+
+| Service | Kostenmodell | Einschätzung 3 Tage |
+|---|---|---|
+| Bedrock (Claude on-demand, Embeddings) | pro Token, kein Leerlaufpreis | größter Posten, grob 1–3 € bei Haiku-Default |
+| DynamoDB (on-demand), SQS, SNS, EventBridge, S3, SSM, Lambda | pro Request/GB | Centbeträge |
+| CloudWatch Logs | pro GB ingestiert | Centbeträge |
+
+> ## ⚠️ ACHTUNG: Ressourcen mit STUNDENPREIS — nach dem Schulungstag ZWINGEND zerstören
+>
+> - **EC2-Instanz für Neo4j** (Tag 2/3, `t4g.small` ≈ 0,02 $/h ≈ 0,50 $/Tag): läuft **24/7 weiter**, auch nachts. Am Ende jedes Schulungstags: `cdk destroy` bzw. Instanz stoppen; nach der Schulung Accounts schließen.
+> - **Niemals anlegen** (Kostenfallen, teils >10 $/Tag pro Stück, ohne dass man etwas tut):
+>   - **OpenSearch Serverless** — Standard-Vektorstore von Bedrock Knowledge Bases! OCU-Grundlast läuft stündlich auch im Leerlauf. Genau deshalb nutzen wir KB **nicht**.
+>   - **Neptune / Neptune Analytics** (Grundlage des Bedrock-KB-GraphRAG-Features)
+>   - **Bedrock Provisioned Throughput** (Model Units kosten dreistellig pro Tag!) — wir bleiben on-demand
+>   - **NAT Gateway** (entsteht schnell versehentlich bei eigenen VPCs — Default-VPC nutzen)
+>   - **Aurora/RDS-Cluster**, SageMaker-Endpoints, ECS/Fargate-Dauerdienste
+> - Schutznetz: SCP gegen teure Instanztypen (Abschnitt A), 20-€-Budget-Alarm pro Account (Abschnitt B5), am letzten Tag gemeinsames `cdk destroy` als Übungsabschluss.
+
+## E. Nach der Schulung (Aufräumen)
 
 ```bash
 aws organizations close-account --account-id <ID>

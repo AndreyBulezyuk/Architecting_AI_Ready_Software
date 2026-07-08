@@ -6,8 +6,14 @@ state on restart; in AWS this would normally live in CDK — done in the exercis
 """
 
 import json
+from typing import TYPE_CHECKING
 
 from config import events_client, settings, sqs_client
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from mypy_boto3_sqs.literals import QueueAttributeNameType
 
 
 def queue_arn(queue_url: str) -> str:
@@ -15,19 +21,33 @@ def queue_arn(queue_url: str) -> str:
     return attrs["Attributes"]["QueueArn"]
 
 
+def create_or_update_queue(
+    name: str, attributes: "Mapping[QueueAttributeNameType, str] | None" = None
+) -> str:
+    """create-if-missing, AWS-correct: real SQS rejects create_queue when the queue
+    exists with different attributes — in that case align the attributes instead."""
+    sqs = sqs_client()
+    try:
+        return sqs.create_queue(QueueName=name, Attributes=attributes or {})["QueueUrl"]
+    except sqs.exceptions.QueueNameExists:
+        queue_url = sqs.get_queue_url(QueueName=name)["QueueUrl"]
+        if attributes:
+            sqs.set_queue_attributes(QueueUrl=queue_url, Attributes=attributes)
+        return queue_url
+
+
 def create_queues() -> tuple[str, str]:
     """Create DLQ + main queue with redrive policy; returns (main_url, dlq_url)."""
-    sqs = sqs_client()
-    dlq_url = sqs.create_queue(QueueName=settings.dlq_name)["QueueUrl"]
+    dlq_url = create_or_update_queue(settings.dlq_name)
     redrive = {"deadLetterTargetArn": queue_arn(dlq_url),
                "maxReceiveCount": str(settings.max_receive_count)}
-    main_url = sqs.create_queue(
-        QueueName=settings.queue_name,
-        Attributes={
+    main_url = create_or_update_queue(
+        settings.queue_name,
+        {
             "VisibilityTimeout": str(settings.visibility_timeout_seconds),
             "RedrivePolicy": json.dumps(redrive),
         },
-    )["QueueUrl"]
+    )
     return main_url, dlq_url
 
 

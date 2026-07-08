@@ -1,101 +1,95 @@
-"""Mini document store: S3 holds the raw text, Postgres the metadata + vector.
+"""Mini document store: S3 holds the raw text, Neo4j the metadata + vector.
 
 Lifecycle (theorie.md, slide 3):
-  upsert  -> raw text to S3, row marked embedding_stale
-  reembed -> embeds all stale rows in one batch
-  search  -> top-k over non-stale rows only
+  upsert  -> raw text to S3, node marked stale (embedding removed = out of the index)
+  reembed -> embeds all stale nodes from their S3 source
+  search  -> top-k via the vector index (stale nodes have no embedding -> not indexed)
 """
 
-import psycopg
-from psycopg import sql
+from typing import LiteralString, cast
 
-from config import s3_client, settings
-from embeddings import embed, to_pgvector
+from neo4j import Driver, GraphDatabase
+
+from config import bucket_name, s3_client, settings
+from embeddings import embed
 
 
-def connect() -> psycopg.Connection:
-    return psycopg.connect(settings.postgres_dsn, autocommit=True)
+def driver() -> Driver:
+    return GraphDatabase.driver(  # pyright: ignore[reportUnknownMemberType]
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    )
 
 
 def init_schema() -> None:
     s3 = s3_client()
-    if settings.aws_endpoint_url:  # LocalStack accepts the location constraint too
-        existing = [b.get("Name") for b in s3.list_buckets().get("Buckets", [])]
-        if settings.raw_bucket not in existing:
-            s3.create_bucket(
-                Bucket=settings.raw_bucket,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
-            )
-    with connect() as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        conn.execute(
-            sql.SQL(
-                """
-                CREATE TABLE IF NOT EXISTS documents (
-                    id text PRIMARY KEY,
-                    title text NOT NULL,
-                    s3_key text NOT NULL,
-                    embedding vector({dimensions}),
-                    embedding_model text,
-                    embedding_stale boolean NOT NULL DEFAULT true,
-                    updated_at timestamptz NOT NULL DEFAULT now()
-                )
-                """
-            ).format(dimensions=sql.Literal(settings.embedding_dimensions))
+    try:
+        s3.create_bucket(
+            Bucket=bucket_name(),
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
         )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS documents_embedding_hnsw "
-            "ON documents USING hnsw (embedding vector_cosine_ops)"
+    except (s3.exceptions.BucketAlreadyOwnedByYou, s3.exceptions.BucketAlreadyExists):
+        pass
+    with driver() as neo4j:
+        # DDL cannot take parameters — index name/dimensions come from trusted settings
+        ddl = (
+            f"CREATE VECTOR INDEX {settings.vector_index_name} IF NOT EXISTS "
+            "FOR (d:Document) ON (d.embedding) "
+            f"OPTIONS {{indexConfig: {{`vector.dimensions`: {settings.embedding_dimensions}, "
+            "`vector.similarity_function`: 'cosine'}}"
         )
+        neo4j.execute_query(cast(LiteralString, ddl))
+        neo4j.execute_query("CALL db.awaitIndexes(60)")
 
 
 def upsert_document(doc_id: str, title: str, body: str) -> None:
-    """Write path: raw text to S3, row becomes stale — embedding happens later."""
+    """Write path: raw text to S3, node becomes stale — embedding happens later.
+    Removing the embedding property takes the node out of the vector index."""
     key = f"documents/{doc_id}.txt"
-    s3_client().put_object(Bucket=settings.raw_bucket, Key=key, Body=body.encode())
-    with connect() as conn:
-        conn.execute(
+    s3_client().put_object(Bucket=bucket_name(), Key=key, Body=body.encode())
+    with driver() as neo4j:
+        neo4j.execute_query(
             """
-            INSERT INTO documents (id, title, s3_key, embedding_stale, updated_at)
-            VALUES (%s, %s, %s, true, now())
-            ON CONFLICT (id) DO UPDATE
-                SET title = EXCLUDED.title, s3_key = EXCLUDED.s3_key,
-                    embedding_stale = true, updated_at = now()
+            MERGE (d:Document {id: $id})
+            SET d.title = $title, d.s3_key = $key, d.stale = true,
+                d.updated_at = datetime(), d.embedding = null
             """,
-            (doc_id, title, key),
+            id=doc_id,
+            title=title,
+            key=key,
         )
 
 
 def reembed_stale() -> int:
     """Batch step: embed every stale document from its S3 source; returns count."""
     s3 = s3_client()
-    with connect() as conn:
-        rows = conn.execute(
-            "SELECT id, s3_key FROM documents WHERE embedding_stale"
-        ).fetchall()
-        for doc_id, s3_key in rows:
-            body = s3.get_object(Bucket=settings.raw_bucket, Key=s3_key)["Body"].read()
-            conn.execute(
+    with driver() as neo4j:
+        records = neo4j.execute_query(
+            "MATCH (d:Document) WHERE d.stale RETURN d.id AS id, d.s3_key AS s3_key"
+        ).records
+        for record in records:
+            body = s3.get_object(Bucket=bucket_name(), Key=record["s3_key"])["Body"].read()
+            neo4j.execute_query(
                 """
-                UPDATE documents
-                   SET embedding = %s, embedding_model = %s, embedding_stale = false
-                 WHERE id = %s
+                MATCH (d:Document {id: $id})
+                SET d.embedding = $embedding, d.embedding_model = $model, d.stale = false
                 """,
-                (to_pgvector(embed(body.decode())), settings.embedding_model, doc_id),
+                id=record["id"],
+                embedding=embed(body.decode()),
+                model=settings.embedding_model,
             )
-    return len(rows)
+        neo4j.execute_query("CALL db.awaitIndexes(60)")  # index updates are applied async
+    return len(records)
 
 
 def search(query: str, k: int = 3) -> list[tuple[str, str]]:
-    """Top-k over non-stale documents; returns (id, title) pairs, best first."""
-    with connect() as conn:
-        rows = conn.execute(
-            """
-            SELECT id, title FROM documents
-             WHERE NOT embedding_stale
-             ORDER BY embedding <=> %s::vector
-             LIMIT %s
-            """,
-            (to_pgvector(embed(query)), k),
-        ).fetchall()
-    return [(row[0], row[1]) for row in rows]
+    """Top-k over embedded documents; returns (id, title) pairs, best first."""
+    with driver() as neo4j:
+        records = neo4j.execute_query(
+            "CALL db.index.vector.queryNodes($index, $k, $query) "
+            "YIELD node, score "
+            "RETURN node.id AS id, node.title AS title ORDER BY score DESC",
+            index=settings.vector_index_name,
+            k=k,
+            query=embed(query),
+        ).records
+    return [(record["id"], record["title"]) for record in records]

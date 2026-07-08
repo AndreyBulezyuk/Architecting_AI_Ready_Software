@@ -5,8 +5,9 @@ description = "Solution tag-1/05: event-driven re-embedding + EXPLAIN proof for 
 requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.35",
+    "boto3-stubs[s3,sqs]>=1.43.40",
     "botocore[crt]>=1.35",
-    "psycopg[binary]>=3.2",
+    "neo4j>=5.28",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
 ]

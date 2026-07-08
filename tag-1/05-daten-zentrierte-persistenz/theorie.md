@@ -10,7 +10,7 @@ mdc: false
 
 ###### tag-1/05-daten-zentrierte-persistenz · Tag 1 · Kapitel 05
 
-Zugriffsmuster, Embedding-Lifecycle, pgvector
+Zugriffsmuster, Embedding-Lifecycle, Neo4j Vector Index
 
 **Tag 1 · Kapitel 05**
 
@@ -26,15 +26,16 @@ Roter Faden: In Kapitel 04 fließen Events — jetzt klären wir, WO die Daten l
 
 ###### tag-1/05-daten-zentrierte-persistenz · Tag 1 · Kapitel 05
 
-| Zugriffsmuster | Store-Typ | Lokal | AWS |
-|---|---|---|---|
-| Transaktionen, Joins, Reporting | Relational | [PostgreSQL](https://www.postgresql.org/docs/) | [Aurora/RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/) |
-| Key-Lookup bei beliebiger Skala | Key-Value | DynamoDB (LocalStack) | [DynamoDB](https://docs.aws.amazon.com/dynamodb/) |
-| Semantische Ähnlichkeit ("was passt dazu?") | Vektor-Index | [pgvector](https://github.com/pgvector/pgvector) | Aurora/RDS + pgvector |
-| Beziehungen, Multi-Hop ("was hängt womit zusammen?") | Graph | [Neo4j](https://neo4j.com/docs/) | Neo4j auf EC2 (Tag 2) |
-| Rohdaten, Dokumente, Modelle-Artefakte | Objekt | S3 (LocalStack) | [S3](https://docs.aws.amazon.com/s3/) |
+| Zugriffsmuster | Store-Typ | In dieser Schulung |
+|---|---|---|
+| Key-Lookup bei beliebiger Skala | Key-Value | [DynamoDB](https://docs.aws.amazon.com/dynamodb/) (AWS, on-demand) |
+| Semantische Ähnlichkeit ("was passt dazu?") | Vektor-Index | [Neo4j Vector Index](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/) — dieselbe DB wie der Graph |
+| Beziehungen, Multi-Hop ("was hängt womit zusammen?") | Graph | [Neo4j](https://neo4j.com/docs/) (lokal; auf EC2 ab Tag 2) |
+| Rohdaten, Dokumente, Modell-Artefakte | Objekt | [S3](https://docs.aws.amazon.com/s3/) (AWS) |
+| Transaktionen, Joins, Reporting | Relational | [Aurora/RDS](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/) + [pgvector](https://github.com/pgvector/pgvector) — hier bewusst **nicht** im Einsatz |
 
-**Anti-Pattern aus Übung 01:** alles in eine Tabelle, Suche per `LIKE` — die KI bekommt keinen brauchbaren Zugriffspfad.
+- **Stack-Entscheidung:** Vektor + Graph in **einer** DB (Neo4j) statt zusätzlich Postgres/pgvector — weniger Tool-Vielfalt, und der GraphRAG-Vergleich an Tag 2 hat nur noch eine Variable: das Retrieval-Muster, nicht die Datenbank
+- **Anti-Pattern aus Übung 01:** alles in eine Tabelle, Suche per `LIKE` — die KI bekommt keinen brauchbaren Zugriffspfad
 
 <!--
 Tag 1 · Kapitel 05 · Folie 2/6 (Zugriffsmuster → Store)
@@ -52,7 +53,7 @@ Merksatz anbieten: "Erst fragen, WIE gelesen wird — dann entscheiden, WO gesch
 flowchart LR
     D[Dokument\nS3: Rohtext] --> C[Chunking]
     C --> E[Embedding\nBedrock Titan/Cohere]
-    E --> V[(Vektor-Index\npgvector)]
+    E --> V[(Neo4j\nVector Index)]
     V --> Q[Top-k-Suche\nzur Laufzeit]
     D -. Dokument geändert .-> S[stale markieren]
     S -->|Batch / Event| E
@@ -72,30 +73,29 @@ Kostenrechnung an der Tafel: 40.000 Dokumente re-embedden bei Modellwechsel — 
 
 ---
 
-# pgvector konkret
+# Neo4j Vector Index konkret
 
 ###### tag-1/05-daten-zentrierte-persistenz · Tag 1 · Kapitel 05
 
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE TABLE documents (id text PRIMARY KEY, title text,
-                        embedding vector(1024), embedding_stale boolean);
-CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
-SELECT id, title FROM documents WHERE NOT embedding_stale
-ORDER BY embedding <=> $1 LIMIT 5;   -- <=> Cosine, <-> L2, <#> negatives Inner Product
+```cypher
+CREATE VECTOR INDEX document_embeddings IF NOT EXISTS
+FOR (d:Document) ON (d.embedding)
+OPTIONS {indexConfig: {`vector.dimensions`: 16,
+                       `vector.similarity_function`: 'cosine'}};
+
+CALL db.index.vector.queryNodes('document_embeddings', 5, $queryVector)
+YIELD node, score RETURN node.id, node.title ORDER BY score DESC;
 ```
 
-| Index | Eigenschaft |
-|---|---|
-| **[HNSW](https://github.com/pgvector/pgvector#hnsw)** | Beste Query-Qualität/Geschwindigkeit; langsamerer Aufbau, mehr RAM — **unser Default** |
-| **[IVFFlat](https://github.com/pgvector/pgvector#ivfflat)** | Schneller Aufbau; braucht `lists`-Tuning und gefüllte Tabelle |
-
-**Grenzen:** Index maximal 2.000 Dimensionen (`vector`-Spalte selbst bis 16.000); ANN-Indexe sind **approximativ** — Recall < 100 % ist normal und konfigurierbar. Ohne Index: exakte Suche, aber sequentiell.
+- **`score` ist Ähnlichkeit** (größer = besser) — kein Distanzoperator wie bei pgvector/SQL
+- Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; Zustand prüfbar per `SHOW VECTOR INDEXES` (State `ONLINE`, `populationPercent`)
+- Dimension und Similarity-Funktion (`cosine`/`euclidean`) sind **fix pro Index** — Modellwechsel mit anderer Dimension heißt: neuer Index (passt zur Lifecycle-Folie)
+- ANN-Suche ist **approximativ** — Recall < 100 % ist normal; max. 4096 Dimensionen ([Doku](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/))
 
 <!--
-Tag 1 · Kapitel 05 · Folie 4/6 (pgvector konkret)
+Tag 1 · Kapitel 05 · Folie 4/6 (Neo4j Vector Index konkret)
 
-Wichtig gegen Halbwissen: kleiner Datenbestand ⇒ Postgres nutzt trotz Index einen Seq Scan — das ist korrektes Verhalten des Planners, kein Fehler. Kommt als Aha-Moment in der Übung (EXPLAIN).
+Trick der Demo hervorheben: stale markieren = embedding-Property entfernen → der Knoten fliegt automatisch aus dem Index, kein WHERE-Filter nötig. Das ist der Neo4j-Weg für "abgeleitete Sicht invalidieren". Alternative pgvector/Aurora kurz einordnen für SQL-lastige Teams.
 -->
 
 ---
@@ -106,7 +106,7 @@ Wichtig gegen Halbwissen: kleiner Datenbestand ⇒ Postgres nutzt trotz Index ei
 
 ```mermaid
 flowchart LR
-    SRC[(Source of Truth\nPostgres/S3)] -->|Events, Kap. 04| V[(Vektor-Sicht\npgvector)]
+    SRC[(Source of Truth\nS3 Rohtext)] -->|Events, Kap. 04| V[(Vektor-Sicht\nNeo4j Vector Index)]
     SRC -->|Events| G[(Graph-Sicht\nNeo4j, Tag 2)]
     SRC -->|Events| P[(Profil-Sicht\nDynamoDB, Kap. 06)]
     style SRC fill:#e8f4fd,stroke:#2b7bb9
@@ -117,7 +117,7 @@ flowchart LR
 - Jede Sicht beantwortet genau die Frage, für die sie gebaut ist — das ist der Kern von "daten-zentriert für KI"
 
 <!--
-Tag 1 · Kapitel 05 · Folie 5/6 (Polyglot mit einer Wahrheit)
+Tag 1 · Kapitel 05 · Folie 5/6 (Polyglot mit einem Single-Source-of-Truth DB)
 
 Diskussionsfrage: "Was passiert, wenn jemand die Vektor-Sicht direkt beschreibt, ohne die Quelle zu ändern?" — Drift, nicht reproduzierbar. Deshalb: Sichten dürfen nur von der Pipeline beschrieben werden.
 -->
@@ -128,11 +128,11 @@ Diskussionsfrage: "Was passiert, wenn jemand die Vektor-Sicht direkt beschreibt,
 
 ###### tag-1/05-daten-zentrierte-persistenz · Tag 1 · Kapitel 05
 
-**Demo:** S3 (Rohtext) + Postgres (Metadaten + `vector`) — Ingest → Embedding → Top-k-Suche → Update markiert stale → Re-Embed.
+**Demo:** S3 (Rohtext, euer AWS-Account) + Neo4j (Metadaten + Vector Index) — Ingest → Embedding → Top-k-Suche → Update markiert stale → Re-Embed.
 
-**Bewusste Vereinfachung heute:** Embeddings kommen aus einer **deterministischen Fake-Funktion** (hash-basiert, 16 Dimensionen) — gleiche Pipeline, null API-Kosten, testbar ohne AWS. Morgen (Tag 2) wird nur diese eine Funktion gegen Bedrock-Embeddings getauscht.
+**Bewusste Vereinfachung heute:** Embeddings kommen aus einer **deterministischen Fake-Funktion** (hash-basiert, 16 Dimensionen) — gleiche Pipeline, null Token-Kosten, deterministisch testbar. Morgen (Tag 2) wird nur diese eine Funktion gegen Bedrock-Embeddings getauscht.
 
-**Übung:** Re-Embed **event-getrieben** (SQS aus Kapitel 04) + Beweis per `EXPLAIN`, dass euer HNSW-Index überhaupt benutzt wird.
+**Übung:** Re-Embed **event-getrieben** (SQS aus Kapitel 04) + Beweis per `SHOW VECTOR INDEXES`, dass euer Index `ONLINE` ist und die Top-k-Antworten liefert.
 
 <!--
 Tag 1 · Kapitel 05 · Folie 6/6 (Demo & Übung)

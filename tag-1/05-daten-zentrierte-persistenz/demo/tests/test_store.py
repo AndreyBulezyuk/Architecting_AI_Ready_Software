@@ -1,14 +1,26 @@
-"""Lifecycle tests against the local stack (postgres + LocalStack S3)."""
+"""Lifecycle tests: local Neo4j + real AWS S3 (skipped without credentials)."""
 
-import psycopg
+import botocore.exceptions
+import pytest
 import store
-from config import settings
+from config import s3_client
+
+
+def _aws_available() -> bool:
+    try:
+        s3_client()
+        return True
+    except botocore.exceptions.BotoCoreError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(not _aws_available(), reason="AWS credentials required")
 
 
 def reset() -> None:
     store.init_schema()
-    with psycopg.connect(settings.postgres_dsn, autocommit=True) as conn:
-        conn.execute("DELETE FROM documents")
+    with store.driver() as neo4j:
+        neo4j.execute_query("MATCH (d:Document) DETACH DELETE d")
 
 
 def seed() -> None:
@@ -17,16 +29,20 @@ def seed() -> None:
     store.upsert_document("d3", "Katzenfutter", "katze futter napf tier")
 
 
+def stale_count() -> int:
+    with store.driver() as neo4j:
+        records = neo4j.execute_query(
+            "MATCH (d:Document) WHERE d.stale RETURN count(d) AS n"
+        ).records
+    return int(records[0]["n"])
+
+
 def test_ingest_marks_stale_and_reembed_clears_it() -> None:
     reset()
     seed()
-    with psycopg.connect(settings.postgres_dsn) as conn:
-        stale = conn.execute("SELECT count(*) FROM documents WHERE embedding_stale").fetchone()
-        assert stale is not None and stale[0] == 3
+    assert stale_count() == 3
     assert store.reembed_stale() == 3
-    with psycopg.connect(settings.postgres_dsn) as conn:
-        stale = conn.execute("SELECT count(*) FROM documents WHERE embedding_stale").fetchone()
-        assert stale is not None and stale[0] == 0
+    assert stale_count() == 0
 
 
 def test_search_finds_semantically_closest_document() -> None:
@@ -41,7 +57,7 @@ def test_updated_document_disappears_until_reembedded() -> None:
     reset()
     seed()
     store.reembed_stale()
-    # source changes -> derived view is stale -> excluded from search
+    # source changes -> derived view is stale -> no embedding -> out of the index
     store.upsert_document("d1", "Hundeerziehung", "hund welpe leine training tier geduld")
     hits = [doc_id for doc_id, _ in store.search("welpe hund tier", k=3)]
     assert "d1" not in hits

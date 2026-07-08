@@ -1,5 +1,7 @@
-"""Connection settings — defaults match the root docker-compose.yml."""
+"""Settings: raw text in S3 (real AWS), metadata + vectors in local Neo4j."""
 
+import os
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import boto3
@@ -10,26 +12,33 @@ if TYPE_CHECKING:
 
 
 class StoreSettings(BaseSettings):
-    postgres_dsn: str = "postgresql://postgres:trainingpass@localhost:5432/aiready"
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "trainingpass"
 
-    aws_endpoint_url: str | None = "http://localhost:4566"  # None -> real AWS/S3
     aws_region: str = "eu-west-1"
-    raw_bucket: str = "t05-demo-raw-documents"
+    raw_bucket: str = ""  # empty -> auto: t05-demo-raw-<account_id> (bucket names are global)
 
     embedding_dimensions: int = 16
     embedding_model: str = "fake-hash-v1"  # switched to a Bedrock model id on day 2
+    vector_index_name: str = "document_embeddings"
 
 
 settings = StoreSettings()
 
 
+def _session() -> boto3.Session:
+    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    return boto3.Session(profile_name=profile, region_name=settings.aws_region)
+
+
 def s3_client() -> "S3Client":
-    if settings.aws_endpoint_url:  # LocalStack: fixed dummy credentials, no profile lookup
-        return boto3.client(  # pyright: ignore[reportUnknownMemberType]
-            "s3",
-            region_name=settings.aws_region,
-            endpoint_url=settings.aws_endpoint_url,
-            aws_access_key_id="test",
-            aws_secret_access_key="test",
-        )
-    return boto3.client("s3", region_name=settings.aws_region)  # pyright: ignore[reportUnknownMemberType]
+    return _session().client("s3")  # pyright: ignore[reportUnknownMemberType]
+
+
+@lru_cache
+def bucket_name() -> str:
+    if settings.raw_bucket:
+        return settings.raw_bucket
+    account_id: str = _session().client("sts").get_caller_identity()["Account"]  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    return f"t05-demo-raw-{account_id}"

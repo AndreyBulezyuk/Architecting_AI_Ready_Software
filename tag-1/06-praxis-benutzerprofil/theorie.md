@@ -56,7 +56,7 @@ Kontrast zur Katastrophe aus Übung 01 ziehen: TravelMate rief das LLM synchron 
 | # | GenAI-Einsatz | Warum ein LLM (und nicht Code)? | Wann |
 |---|---|---|---|
 | 1 | **Interessen-Verdichtung:** Roh-Signale (Suchtexte, Buchungen) → strukturiertes Profil (`interests`, `persona_summary`) | Freitext-Suchen wie "warm im november nicht teuer mit kindern" versteht kein Regelwerk zuverlässig | Async, nach N neuen Events (Batching = Kostenkontrolle) |
-| 2 | **Profil-Embedding:** Interessen-Text → Vektor → pgvector | Ähnlichkeit statt Gleichheit: "Strandurlaub" matcht "Küstenwanderung" | Direkt nach jeder Verdichtung |
+| 2 | **Profil-Embedding:** Interessen-Text → Vektor → Neo4j Vector Index | Ähnlichkeit statt Gleichheit: "Strandurlaub" matcht "Küstenwanderung" | Direkt nach jeder Verdichtung |
 | 3 | **Empfehlungen:** Top-k Angebote, deren Beschreibungs-Embeddings dem Profil-Vektor am nächsten sind (Kapitel-05-Store!) | Kein Kaltstart-Regelwerk; ein neues Angebot ist sofort empfehlbar | Beim Verdichten materialisiert |
 
 **Anti-Pattern-Check:** LLM pro GET-Request (teuer, langsam), LLM entscheidet allein ohne Schema-Validierung, Empfehlungen live pro Request berechnen.
@@ -76,10 +76,10 @@ Das beantwortet die Frage "wie passt GenAI in eine Profil-API": nicht IN der API
 ```mermaid
 flowchart LR
     E[Events aus Kap. 04\nSearchSubmitted,\nBookingCreated] --> Q[SQS] --> W[Profil-Worker\nidempotent, Kap. 04]
-    W --> R[(Roh-Signale\nPostgres)]
+    W --> R[(Roh-Signale\nDynamoDB)]
     W -->|nach N Events| L[LLM-Verdichtung\nBedrock converse, Kap. 03]
-    L -->|Pydantic-validiert| P[(Profil + Embedding\nPostgres/pgvector, Kap. 05)]
-    O[(Angebots-Katalog\nEmbeddings, Kap. 05)] --> M[Top-k Matching]
+    L -->|Pydantic-validiert| P[(Profil + Empfehlungen\nDynamoDB)]
+    O[(Angebots-Katalog\nNeo4j Vector Index, Kap. 05)] --> M[Top-k Matching]
     P --> M --> P
     P --> API[FastAPI\nGET /user_profiles/id]
     style L fill:#e9f7ef,stroke:#27ae60

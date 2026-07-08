@@ -1,6 +1,7 @@
-"""End-to-end pipeline tests against LocalStack (docker compose up -d).
+"""End-to-end pipeline tests against the participant's AWS account (AWS-first).
 
-pytest forces the LocalStack endpoint itself — the production path stays untouched.
+Resources stay after the run (queue names cannot be reused for 60 s after deletion) —
+remove them explicitly with:  uv run python cleanup.py
 """
 
 # ruff: noqa: E402  (env vars must be set before the config module is imported)
@@ -10,9 +11,7 @@ import os
 import time
 import uuid
 
-os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
-os.environ.setdefault("AWS_ACCESS_KEY_ID", "test")
-os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
+os.environ.setdefault("AWS_PROFILE", "ai-training")
 os.environ["VISIBILITY_TIMEOUT_SECONDS"] = "1"  # fast retries for the DLQ test
 
 import infra
@@ -59,12 +58,13 @@ def test_poison_message_ends_up_in_dlq() -> None:
     sqs.send_message(QueueUrl=main_url, MessageBody=json.dumps({"detail": {"broken": True}}))
 
     # receive without deleting until SQS moves the message to the DLQ
-    for _ in range(6):
+    for _ in range(10):
         worker.poll_once(main_url)
-        time.sleep(1.2)  # let the visibility timeout expire
-        dlq_messages = sqs.receive_message(QueueUrl=dlq_url, MaxNumberOfMessages=1).get(
-            "Messages", []
-        )
+        time.sleep(1.5)  # let the visibility timeout expire
+        # long-poll the DLQ: a short poll on real AWS often misses fresh messages
+        dlq_messages = sqs.receive_message(
+            QueueUrl=dlq_url, MaxNumberOfMessages=1, WaitTimeSeconds=2
+        ).get("Messages", [])
         if dlq_messages:
             body = json.loads(dlq_messages[0].get("Body", "{}"))
             assert body["detail"] == {"broken": True}

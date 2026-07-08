@@ -5,7 +5,7 @@
 
 ## Teil 1 — Nachziehen (≈10 min)
 
-Demo-Tests + REPL-Ablauf ausführen. Probiert zwei eigene Queries ohne Wortüberlappung — wo liegt die Cosine-Distanz eines Treffers, wo die eines Nicht-Treffers?
+Demo-Tests + REPL-Ablauf ausführen. Probiert zwei eigene Queries ohne Wortüberlappung — wo liegt der Similarity-`score` eines Treffers, wo der eines Nicht-Treffers?
 
 ## Teil 2 — Chunking-Experiment mit Hit-Rate (≈35 min)
 
@@ -13,7 +13,7 @@ Bauchgefühl durch Messung ersetzen:
 
 1. Schreibt einen **Mini-Fragenkatalog**: 5 Fragen, jede mit dem `doc_id`, der die Antwort enthält (z. B. *"Wo kann man mit Kindern baden?"* → `algarve`). Nehmt gern 1–2 eigene Dokumente dazu.
 2. Implementiert `hit_rate(questions, k)`: Anteil der Fragen, bei denen der erwartete `doc_id` in den Top-k-Treffern vorkommt.
-3. Ingestiert den Korpus **zweimal** in getrennte Tabellen: einmal mit `max_chars=600, overlap=100` (Demo-Werte), einmal mit `max_chars=150, overlap=0`. Vergleicht die Hit-Rate@3 — und schaut euch an, *welche* Chunks bei der schlechteren Konfiguration gefunden werden.
+3. Ingestiert den Korpus **zweimal** unter getrennten Labels (z. B. `UebChunk` und `UebChunkTiny` — warum braucht jede Konfiguration ein eigenes Label? Tipp: ein Vector Index pro Label+Property): einmal mit `max_chars=600, overlap=100` (Demo-Werte), einmal mit `max_chars=150, overlap=0`. Vergleicht die Hit-Rate@3 — und schaut euch an, *welche* Chunks bei der schlechteren Konfiguration gefunden werden.
 
 **Recherche:** Warum kann ein sehr kleiner Chunk eine hohe Ähnlichkeit haben und trotzdem eine nutzlose Antwortgrundlage sein? (Folie 3 hilft.)
 
@@ -35,5 +35,5 @@ Verwendet beim Query-Embedding absichtlich `search_document` statt `search_query
 
 ## Hinweise
 
-- Tabellen-Präfix `t202_ueb_…`, damit Demo- und Übungsdaten getrennt bleiben.
+- Label-Präfix `Ueb…`, damit Demo- (`Chunk`) und Übungsdaten in der geteilten Neo4j getrennt bleiben.
 - Lösung in `loesung/` — erst nach eigenem Versuch.

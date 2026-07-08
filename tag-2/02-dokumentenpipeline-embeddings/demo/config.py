@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 
 class RagSettings(BaseSettings):
-    postgres_dsn: str = "postgresql://postgres:trainingpass@localhost:5432/aiready"
-    table_name: str = "t202_chunks"
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "trainingpass"
 
     aws_region: str = "eu-west-1"
     # verified July 2026 — multilingual, batches of up to 96 texts, input_type support

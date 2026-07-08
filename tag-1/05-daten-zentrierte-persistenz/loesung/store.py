@@ -1,121 +1,96 @@
-"""Document store where every write publishes a DocumentUpdated event (part 2).
+"""Document store with event-driven re-embedding (exercise parts 2+3).
 
-The re-embed guard: embedding_stale is only cleared if updated_at has not
-changed since the event was processed — a late event never overwrites a
-newer pending change.
+Differences to the demo: upsert publishes a DocumentUpdated event to SQS, and
+re-embedding targets exactly one document instead of scanning all stale nodes.
 """
 
-import psycopg
-from psycopg import sql
+from typing import LiteralString, cast
 
-from config import s3_client, settings, sqs_client
-from embeddings import embed, to_pgvector
+from neo4j import Driver, GraphDatabase
+
+from config import bucket_name, s3_client, settings, sqs_client
+from embeddings import embed
 from models import DocumentUpdated
 
-TABLE = sql.Identifier(settings.table_name)
 
-
-def connect() -> psycopg.Connection:
-    return psycopg.connect(settings.postgres_dsn, autocommit=True)
-
-
-def init_schema() -> str:
-    """Create bucket, queue, table and index; returns the queue url."""
-    s3 = s3_client()
-    existing = [bucket.get("Name") for bucket in s3.list_buckets().get("Buckets", [])]
-    if settings.raw_bucket not in existing:
-        s3.create_bucket(
-            Bucket=settings.raw_bucket,
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
-        )
-    queue_url = sqs_client().create_queue(QueueName=settings.update_queue_name)["QueueUrl"]
-    with connect() as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        conn.execute(
-            sql.SQL(
-                """
-                CREATE TABLE IF NOT EXISTS {table} (
-                    id text PRIMARY KEY,
-                    title text NOT NULL,
-                    s3_key text NOT NULL,
-                    embedding vector({dimensions}),
-                    embedding_model text,
-                    embedding_stale boolean NOT NULL DEFAULT true,
-                    updated_at timestamptz NOT NULL DEFAULT now()
-                )
-                """
-            ).format(table=TABLE, dimensions=sql.Literal(settings.embedding_dimensions))
-        )
-        conn.execute(
-            sql.SQL(
-                "CREATE INDEX IF NOT EXISTS {index} ON {table} "
-                "USING hnsw (embedding vector_cosine_ops)"
-            ).format(index=sql.Identifier(f"{settings.table_name}_embedding_hnsw"), table=TABLE)
-        )
-    return queue_url
-
-
-def upsert_document(doc_id: str, title: str, body: str) -> None:
-    """Write path: S3 + stale row + DocumentUpdated event on the queue."""
-    key = f"documents/{doc_id}.txt"
-    s3_client().put_object(Bucket=settings.raw_bucket, Key=key, Body=body.encode())
-    with connect() as conn:
-        conn.execute(
-            sql.SQL(
-                """
-                INSERT INTO {table} (id, title, s3_key, embedding_stale, updated_at)
-                VALUES (%s, %s, %s, true, now())
-                ON CONFLICT (id) DO UPDATE
-                    SET title = EXCLUDED.title, s3_key = EXCLUDED.s3_key,
-                        embedding_stale = true, updated_at = now()
-                """
-            ).format(table=TABLE),
-            (doc_id, title, key),
-        )
-    queue_url = sqs_client().get_queue_url(QueueName=settings.update_queue_name)["QueueUrl"]
-    sqs_client().send_message(
-        QueueUrl=queue_url,
-        MessageBody=DocumentUpdated(document_id=doc_id).model_dump_json(),
+def driver() -> Driver:
+    return GraphDatabase.driver(  # pyright: ignore[reportUnknownMemberType]
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
     )
 
 
-def reembed_document(doc_id: str) -> bool:
-    """Embed exactly one document; returns False if it vanished meanwhile."""
-    with connect() as conn:
-        row = conn.execute(
-            sql.SQL("SELECT s3_key, updated_at FROM {table} WHERE id = %s").format(table=TABLE),
-            (doc_id,),
-        ).fetchone()
-        if row is None:
-            return False
-        s3_key, seen_updated_at = row
-        body = s3_client().get_object(Bucket=settings.raw_bucket, Key=s3_key)["Body"].read()
-        # guard: only clear the flag if no newer write happened in between
-        conn.execute(
-            sql.SQL(
-                """
-                UPDATE {table}
-                   SET embedding = %s, embedding_model = %s, embedding_stale = false
-                 WHERE id = %s AND updated_at = %s
-                """
-            ).format(table=TABLE),
-            (to_pgvector(embed(body.decode())), settings.embedding_model, doc_id,
-             seen_updated_at),
+def init_schema() -> str:
+    """Bucket + vector index + update queue; returns the queue URL."""
+    s3 = s3_client()
+    try:
+        s3.create_bucket(
+            Bucket=bucket_name(),
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-1"},
         )
+    except (s3.exceptions.BucketAlreadyOwnedByYou, s3.exceptions.BucketAlreadyExists):
+        pass
+    with driver() as neo4j:
+        ddl = (
+            f"CREATE VECTOR INDEX {settings.vector_index_name} IF NOT EXISTS "
+            "FOR (d:UebDocument) ON (d.embedding) "
+            f"OPTIONS {{indexConfig: {{`vector.dimensions`: {settings.embedding_dimensions}, "
+            "`vector.similarity_function`: 'cosine'}}"
+        )
+        neo4j.execute_query(cast(LiteralString, ddl))
+        neo4j.execute_query("CALL db.awaitIndexes(60)")
+    return sqs_client().create_queue(QueueName=settings.update_queue_name)["QueueUrl"]
+
+
+def upsert_document(doc_id: str, title: str, body: str) -> None:
+    """Write path: S3 + stale node + DocumentUpdated event (no direct re-embed!)."""
+    key = f"documents/{doc_id}.txt"
+    s3_client().put_object(Bucket=bucket_name(), Key=key, Body=body.encode())
+    with driver() as neo4j:
+        neo4j.execute_query(
+            """
+            MERGE (d:UebDocument {id: $id})
+            SET d.title = $title, d.s3_key = $key, d.stale = true,
+                d.updated_at = datetime(), d.embedding = null
+            """,
+            id=doc_id,
+            title=title,
+            key=key,
+        )
+    sqs = sqs_client()
+    queue_url = sqs.get_queue_url(QueueName=settings.update_queue_name)["QueueUrl"]
+    sqs.send_message(QueueUrl=queue_url, MessageBody=DocumentUpdated(document_id=doc_id).model_dump_json())
+
+
+def reembed_document(doc_id: str) -> bool:
+    """Embed exactly one document from its S3 source; False if it vanished."""
+    with driver() as neo4j:
+        records = neo4j.execute_query(
+            "MATCH (d:UebDocument {id: $id}) RETURN d.s3_key AS s3_key", id=doc_id
+        ).records
+        if not records:
+            return False
+        body = s3_client().get_object(Bucket=bucket_name(), Key=records[0]["s3_key"])["Body"].read()
+        neo4j.execute_query(
+            """
+            MATCH (d:UebDocument {id: $id})
+            SET d.embedding = $embedding, d.embedding_model = $model, d.stale = false
+            """,
+            id=doc_id,
+            embedding=embed(body.decode()),
+            model=settings.embedding_model,
+        )
+        neo4j.execute_query("CALL db.awaitIndexes(60)")  # index updates are applied async
     return True
 
 
 def search(query: str, k: int = 3) -> list[tuple[str, str]]:
-    with connect() as conn:
-        rows = conn.execute(
-            sql.SQL(
-                """
-                SELECT id, title FROM {table}
-                 WHERE NOT embedding_stale
-                 ORDER BY embedding <=> %s::vector
-                 LIMIT %s
-                """
-            ).format(table=TABLE),
-            (to_pgvector(embed(query)), k),
-        ).fetchall()
-    return [(row[0], row[1]) for row in rows]
+    with driver() as neo4j:
+        records = neo4j.execute_query(
+            "CALL db.index.vector.queryNodes($index, $k, $query) "
+            "YIELD node, score "
+            "RETURN node.id AS id, node.title AS title ORDER BY score DESC",
+            index=settings.vector_index_name,
+            k=k,
+            query=embed(query),
+        ).records
+    return [(record["id"], record["title"]) for record in records]

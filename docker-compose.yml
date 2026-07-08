@@ -1,6 +1,8 @@
 # Local training stack — single entrypoint for all chapters.
-# Core services:        docker compose up -d
+# Core service:         docker compose up -d              (Neo4j: graph + vector index)
+# AWS emulation:        docker compose --profile emulation up -d   (LocalStack, only shown in tag-1/02)
 # With observability:   docker compose --profile observability up -d   (Langfuse, used from tag-3)
+# Everything else (S3, SQS, DynamoDB, EventBridge, Bedrock) runs directly against AWS.
 name: ai-ready-training
 
 services:
@@ -20,24 +22,9 @@ services:
       timeout: 5s
       retries: 20
 
-  postgres:
-    image: pgvector/pgvector:pg17
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: trainingpass
-      POSTGRES_DB: aiready
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d aiready"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
   localstack:
     image: localstack/localstack:4
+    profiles: ["emulation"]
     ports:
       - "4566:4566" # unified edge endpoint
     environment:
@@ -144,7 +131,6 @@ services:
 
 volumes:
   neo4j_data:
-  postgres_data:
   langfuse_pg_data:
   clickhouse_data:
   minio_data:

@@ -4,7 +4,7 @@ Ablauf (~15 min), alles live im Terminal:
 
 ```bash
 # 1. Im Repo-Root: Stack starten und Health beobachten
-docker compose up -d
+docker compose --profile emulation up -d   # Neo4j + LocalStack (Profil nur für dieses Kapitel)
 docker compose ps          # warten bis alles "healthy"
 
 # 2. Kurz zeigen: Neo4j Browser http://localhost:7474 (neo4j/trainingpass)
@@ -12,7 +12,7 @@ docker compose ps          # warten bis alles "healthy"
 # 3. In dieses Demo-Projekt wechseln und Tests laufen lassen
 cd tag-1/02-setup-lokal/demo
 uv sync                    # legt .venv an, installiert gepinnte Dependencies
-uv run pytest -v           # 3 Tests: Neo4j, Postgres/pgvector, LocalStack-S3
+uv run pytest -v           # 3 Tests: Neo4j erreichbar, Neo4j Vector Index, LocalStack-S3
 
 # 4. Qualitäts-Tooling einmal zeigen
 uv run ruff check .

@@ -1,4 +1,10 @@
-"""Deterministic fake embeddings — identical to the demo (swapped for Bedrock on day 2)."""
+"""Deterministic fake embeddings (see theorie.md, slide 6).
+
+Same pipeline shape as real embeddings, zero API cost, fully testable:
+words are hashed into a fixed number of buckets, the vector is L2-normalized
+so cosine similarity behaves sensibly. On day 2 this single function is
+replaced by a Bedrock embeddings call — nothing else changes.
+"""
 
 import hashlib
 import math
@@ -15,7 +21,3 @@ def embed(text: str) -> list[float]:
         vector[bucket] += 1.0
     norm = math.sqrt(sum(component * component for component in vector)) or 1.0
     return [component / norm for component in vector]
-
-
-def to_pgvector(vector: list[float]) -> str:
-    return "[" + ", ".join(f"{component:.6f}" for component in vector) + "]"

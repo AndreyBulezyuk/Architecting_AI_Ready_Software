@@ -31,7 +31,7 @@ flowchart LR
     I[Ingest\nS3 Rohtext] --> X[Extraktion\nText aus PDF/HTML]
     X --> C[Chunking\nGröße + Overlap]
     C --> E[Embedding\nBedrock Cohere/Titan]
-    E --> V[(Index\npgvector HNSW)]
+    E --> V[(Neo4j\nVector Index)]
     Q[Frage] --> QE[Query-Embedding] --> V
     V --> K[Top-k Chunks] --> A[Antwort-Synthese\nClaude + Kontext]
     style E fill:#e9f7ef,stroke:#27ae60
@@ -102,12 +102,12 @@ Beide Modelle sind im Schulungskonto live getestet. Falls jemand fragt: cohere.e
 sequenceDiagram
     participant U as Client
     participant R as RAG-Service
-    participant V as pgvector
+    participant V as Neo4j Vector Index
     participant L as Claude (Haiku)
     U->>R: Frage
     R->>R: embed(Frage, search_query)
     R->>V: Top-k Chunks (Cosine)
-    V-->>R: k Chunks + Distanzen
+    V-->>R: k Chunks + Scores
     R->>L: System-Regeln + nummerierter Kontext + Frage
     L-->>R: Antwort mit [n]-Quellen
     R-->>U: Antwort + Chunk-Referenzen

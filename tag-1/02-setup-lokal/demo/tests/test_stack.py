@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 import boto3
-import psycopg
 from neo4j import GraphDatabase
 
 if TYPE_CHECKING:
@@ -32,11 +31,26 @@ def test_neo4j_is_reachable() -> None:
         assert record["ok"] == 1
 
 
-def test_postgres_has_pgvector() -> None:
-    with psycopg.connect(settings.postgres_dsn, autocommit=True) as conn:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        row = conn.execute("SELECT '[1,2,3]'::vector").fetchone()
-        assert row is not None
+def test_neo4j_vector_index_available() -> None:
+    # proves the native vector index works — from tag-2 on it carries all embeddings
+    with GraphDatabase.driver(
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    ) as driver:
+        driver.execute_query(
+            "CREATE VECTOR INDEX smoke_embedding IF NOT EXISTS "
+            "FOR (s:SmokeDoc) ON (s.embedding) "
+            "OPTIONS {indexConfig: {`vector.dimensions`: 3, "
+            "`vector.similarity_function`: 'cosine'}}"
+        )
+        driver.execute_query("MATCH (s:SmokeDoc) DETACH DELETE s")
+        driver.execute_query("CREATE (:SmokeDoc {embedding: [1.0, 0.0, 0.0]})")
+        driver.execute_query("CALL db.awaitIndexes(60)")
+        records = driver.execute_query(
+            "CALL db.index.vector.queryNodes('smoke_embedding', 1, $query) "
+            "YIELD score RETURN score",
+            query=[1.0, 0.0, 0.0],
+        ).records
+        assert records and records[0]["score"] > 0.99
 
 
 def test_localstack_s3_roundtrip() -> None:
