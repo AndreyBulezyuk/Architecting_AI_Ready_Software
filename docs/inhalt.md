@@ -50,6 +50,14 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 - [Lösung T2/02](../tag-2/02-dokumentenpipeline-embeddings/loesung/README.md) — `tag-2/02-dokumentenpipeline-embeddings/loesung/README.md`
 - [Dokumentenpipeline & Embeddings](../tag-2/02-dokumentenpipeline-embeddings/theorie.md) — `tag-2/02-dokumentenpipeline-embeddings/theorie.md`
 - [Übung T2/02 — Chunking messen & die RAG-Baseline fertigbauen](../tag-2/02-dokumentenpipeline-embeddings/uebung.md) — `tag-2/02-dokumentenpipeline-embeddings/uebung.md`
+- [Demo T2/03 — GraphRAG von Hand](../tag-2/03-graphrag/demo/README.md) — `tag-2/03-graphrag/demo/README.md`
+- [Lösung T2/03](../tag-2/03-graphrag/loesung/README.md) — `tag-2/03-graphrag/loesung/README.md`
+- [GraphRAG](../tag-2/03-graphrag/theorie.md) — `tag-2/03-graphrag/theorie.md`
+- [Übung T2/03 — Ontologie erweitern & GraphRAG gegen die Baseline](../tag-2/03-graphrag/uebung.md) — `tag-2/03-graphrag/uebung.md`
+- [Demo T2/04 — Der Assistant-Service](../tag-2/04-ki-services-in-microservices/demo/README.md) — `tag-2/04-ki-services-in-microservices/demo/README.md`
+- [Lösung T2/04](../tag-2/04-ki-services-in-microservices/loesung/README.md) — `tag-2/04-ki-services-in-microservices/loesung/README.md`
+- [KI-Services in Microservice-Landschaften](../tag-2/04-ki-services-in-microservices/theorie.md) — `tag-2/04-ki-services-in-microservices/theorie.md`
+- [Übung T2/04 — Euer Retrieval wird ein Service (sync + async)](../tag-2/04-ki-services-in-microservices/uebung.md) — `tag-2/04-ki-services-in-microservices/uebung.md`
 - [Tag 2 — GraphRAG & KI-zentrierte Services](../tag-2/README.md) — `tag-2/README.md`
 
 ## Tag 3

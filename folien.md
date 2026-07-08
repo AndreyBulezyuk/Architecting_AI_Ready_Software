@@ -45,3 +45,11 @@ src: ./tag-2/01-genai-anwendungsarchitektur/theorie.md
 ---
 src: ./tag-2/02-dokumentenpipeline-embeddings/theorie.md
 ---
+
+---
+src: ./tag-2/03-graphrag/theorie.md
+---
+
+---
+src: ./tag-2/04-ki-services-in-microservices/theorie.md
+---

@@ -61,8 +61,9 @@ flowchart LR
     style S fill:#fdf2e9,stroke:#e67e22
 ```
 
+- **Begriff `stale`** (dt. "veraltet"): Die Quelle in S3 wurde geändert, aber das Embedding in Neo4j ist noch der alte Stand — das Dokument darf bis zum Re-Embed nicht in Suchtreffern auftauchen.
 - Embeddings sind **abgeleitete Daten** — jederzeit aus der Quelle reproduzierbar, aber **nicht kostenlos** (API-Kosten pro Token!)
-- Änderung der Quelle ⇒ Embedding ist **stale**: markieren und **asynchron** neu berechnen (Event aus Kapitel 04), nicht synchron im Schreibpfad
+- Änderung der Quelle ⇒ Embedding **stale** markieren und **asynchron** neu berechnen (Event aus Kapitel 04), nicht synchron im Schreibpfad
 - Modellwechsel (z. B. Titan v1 → v2) ⇒ **alle** Embeddings neu — Migrationspfad von Anfang an mitdenken; Modellname gehört als Spalte an jede Embedding-Zeile
 
 <!--
@@ -87,8 +88,9 @@ CALL db.index.vector.queryNodes('document_embeddings', 5, $queryVector)
 YIELD node, score RETURN node.id, node.title ORDER BY score DESC;
 ```
 
+- **Top-k-Suche** (`queryNodes(index, k, vector)`): "Gib mir die `k` Knoten, deren Embeddings dem Query-Vektor am nächsten sind." Der Index navigiert dafür eine vorab aufgebaute Nachbarschaftsstruktur (ANN), statt alle Vektoren durchzurechnen — deshalb bleibt die Suche auch bei Millionen Knoten schnell.
 - **`score` ist Ähnlichkeit** (größer = besser) — kein Distanzoperator wie bei pgvector/SQL
-- Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; Zustand prüfbar per `SHOW VECTOR INDEXES` (State `ONLINE`, `populationPercent`)
+- Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; Zustand prüfbar per `SHOW VECTOR INDEXES` — dort pflegt Neo4j automatisch `state` (Lebenszyklus des Index: `POPULATING` = baut noch auf, `ONLINE` = abfragbar, `FAILED`) und `populationPercent` (wie viel Prozent der Knoten schon eingearbeitet sind); nichts davon rechnet ihr selbst
 - Dimension und Similarity-Funktion (`cosine`/`euclidean`) sind **fix pro Index** — Modellwechsel mit anderer Dimension heißt: neuer Index (passt zur Lifecycle-Folie)
 - ANN-Suche ist **approximativ** — Recall < 100 % ist normal; max. 4096 Dimensionen ([Doku](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/))
 
