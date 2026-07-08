@@ -25,7 +25,7 @@ class BookingCreated(BaseModel):
 
 
 class ProfileSummary(BaseModel):
-    """Contract for the LLM condensation — validated, never trusted blindly."""
+    """Contract for the LLM summarization — validated, never trusted blindly."""
 
     interests: list[str] = Field(max_length=5)
     persona_summary: str = Field(max_length=300)

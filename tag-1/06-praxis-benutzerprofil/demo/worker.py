@@ -1,4 +1,4 @@
-"""Profile worker: SQS -> dedup signal write -> threshold -> LLM condensation ->
+"""Profile worker: SQS -> dedup signal write -> threshold -> LLM summarization ->
 profile + vector recommendations. 5 events = ONE llm call, not five.
 
 Run: uv run python worker.py
@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from catalog import recommend
-from condense import condense
+from summarize import summarize_profile
 from config import dynamodb_client, settings, sqs_client
 
 
@@ -24,7 +24,7 @@ def store_signal(user_id: str, signal_id: str, kind: str, payload: str) -> bool:
                 "signal_id": {"S": signal_id},
                 "kind": {"S": kind},
                 "payload": {"S": payload},
-                "condensed": {"BOOL": False},
+                "summarized": {"BOOL": False},
                 "occurred_at": {"S": datetime.now(UTC).isoformat()},
             },
             ConditionExpression="attribute_not_exists(signal_id)",
@@ -38,17 +38,17 @@ def fresh_signals(user_id: str) -> list[dict[str, Any]]:
     response = dynamodb_client().query(
         TableName=settings.signals_table,
         KeyConditionExpression="user_id = :u",
-        FilterExpression="condensed = :f",
+        FilterExpression="summarized = :f",
         ExpressionAttributeValues={":u": {"S": user_id}, ":f": {"BOOL": False}},
     )
     return list(response.get("Items", []))
 
 
-def condense_user(user_id: str) -> None:
+def summarize_user(user_id: str) -> None:
     """Threshold reached: one LLM call over ALL fresh signals, then materialize."""
     signals = fresh_signals(user_id)
     lines = [f"{item['kind'].get('S')}: {item['payload'].get('S')}" for item in signals]
-    summary = condense(lines)
+    summary = summarize_profile(lines)
     recommendations = recommend(summary.interests)
 
     dynamodb = dynamodb_client()
@@ -63,19 +63,19 @@ def condense_user(user_id: str) -> None:
             "updated_at": {"S": datetime.now(UTC).isoformat()},
         },
     )
-    for item in signals:  # mark as condensed so the next threshold starts fresh
+    for item in signals:  # mark as summarized so the next threshold starts fresh
         signal_id = item["signal_id"].get("S")
         assert signal_id is not None
         dynamodb.update_item(
             TableName=settings.signals_table,
             Key={"user_id": {"S": user_id}, "signal_id": {"S": signal_id}},
-            UpdateExpression="SET condensed = :t",
+            UpdateExpression="SET summarized = :t",
             ExpressionAttributeValues={":t": {"BOOL": True}},
         )
 
 
 def poll_once(queue_url: str) -> tuple[int, int]:
-    """Returns (stored, duplicates); triggers condensation when the threshold is hit."""
+    """Returns (stored, duplicates); triggers summarization when the threshold is hit."""
     sqs = sqs_client()
     response = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10, WaitTimeSeconds=2)
     stored = duplicates = 0
@@ -99,9 +99,9 @@ def poll_once(queue_url: str) -> tuple[int, int]:
             duplicates += 1
         sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
 
-        if len(fresh_signals(user_id)) >= settings.condense_threshold:
-            condense_user(user_id)
-            print(f"condensed profile for {user_id}")
+        if len(fresh_signals(user_id)) >= settings.summarize_threshold:
+            summarize_user(user_id)
+            print(f"summarized profile for {user_id}")
     return stored, duplicates
 
 

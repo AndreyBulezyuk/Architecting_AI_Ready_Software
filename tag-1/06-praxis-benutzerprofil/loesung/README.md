@@ -1,11 +1,19 @@
 # Lösung 06
 
-Die Referenzlösung ist bewusst identisch mit der [Demo](../demo/) — dort steht die komplette, getestete Implementierung aller vier Etappen (`infra.py`, `worker.py`, `condense.py`, `catalog.py`, `api.py` + End-to-End-Test). Nach der Übung dort vergleichen.
+Vollständige Lösung der vier Etappen, mit eigenen Ressourcen-Namen (`t06-ueb-…`, Neo4j-Label `UebOffer`), damit nichts mit der Demo kollidiert. Voraussetzungen: AWS-Profil aktiv, Bedrock Model Access, Neo4j läuft.
+
+```bash
+uv sync
+uv run pytest -v            # Etappen A -> B -> C/D als Tests (~40 s, 1 Bedrock-Call)
+uv run fastapi dev api.py   # die gestufte Lese-API von Hand erkunden
+uv run python cleanup.py    # Bus, Rule, Queues, Tabellen entfernen
+```
+
+**Der wichtigste Unterschied zur Demo:** [api.py](api.py) ist **gestuft** wie die Übung. Etappe B verlangt eine Antwort aus den **Roh-Signalen** (`signal_count`, `last_seen_at`, `interests: []`), lange bevor ein LLM je gelaufen ist — erst nach der Summarization (C/D) füllt derselbe Endpoint `interests`, `persona_summary`, `travel_style` und `recommendations` dazu. Die Demo-API kennt nur den Endzustand.
 
 Stolpersteine je Etappe:
 
-- **A (Dedup):** `put_item` mit `ConditionExpression="attribute_not_exists(signal_id)"` — atomar, kein `get_item`-Race. Das Duplikat wirft `ConditionalCheckFailedException`, die ihr fangt und zählt.
-- **B (404):** "Kein Profil" ist ein Fakt, den der Aufrufer sehen muss — ein leeres 200 verschleiert den Zustand und bricht Caching-/Retry-Logik der Konsumenten.
-- **C (Verdichtung):** `temperature=0` + `maxTokens`-Deckel für deterministisch-knappe Antworten; validiert wird trotzdem (`model_validate_json` + genau 1 Retry mit Fehlertext). Schwelle prüfen **nach** dem Signal-Write, Signale nach der Verdichtung als `condensed` markieren — sonst verdichtet jedes weitere Event erneut.
-- **D (Empfehlungen):** Katalog und Interessen **müssen** durch dieselbe Embedding-Funktion laufen — zwei verschiedene Funktionen erzeugen inkompatible Vektorräume, die Suche liefert dann plausiblen Zufall.
-- **Aufräumen:** `uv run python cleanup.py` in der Demo entfernt Bus, Rule, Queues und beide Tabellen.
+- **A (Dedup):** `put_item` mit `ConditionExpression="attribute_not_exists(signal_id)"` — die Prüfung passiert atomar im Schreib-Call selbst. Die naive Alternative (erst per `get_item` prüfen, dann schreiben) hätte eine **Race Condition**: Zwischen Prüfen und Schreiben kann ein parallel laufender Worker dasselbe Signal einfügen — beide sehen "existiert nicht" und schreiben doppelt. Das Duplikat wirft stattdessen `ConditionalCheckFailedException`; der Test beweist: 6 Events ⇒ genau 5 Items.
+- **B (404):** 404 heißt "wir kennen diesen Nutzer gar nicht" — das muss vom Fall "Nutzer bekannt, aber noch keine Summarization gelaufen" (200 mit leeren `interests`) unterscheidbar bleiben. Ein leeres 200 für Unbekannte verschleiert den Zustand.
+- **C (Summarization):** `temperature=0` + `maxTokens`-Deckel; validiert wird trotzdem (`model_validate_json` + 1 Retry). **LLM-JSON-Falle:** Claude wickelt das JSON gern in einen ```json-Fence — bei `temperature=0` deterministisch, der Retry allein rettet nichts. Deshalb `_strip_code_fence` in [summarize.py](summarize.py) vor der Validierung.
+- **D (Empfehlungen):** Katalog und Interessen laufen durch **dieselbe** Embedding-Funktion — zwei verschiedene Funktionen erzeugen inkompatible Vektorräume. Pro Label+Property nur ein Vector Index → eigenes Label `UebOffer` mit eigenem Index.

@@ -1,4 +1,4 @@
-"""LLM condensation: raw signals -> validated ProfileSummary (contract from chapter 03).
+"""LLM summarization: raw signals -> validated ProfileSummary (contract from chapter 03).
 
 Day-1 approach: prompt for JSON + model_validate_json + one retry. Day 2 (T2/01)
 shows the sturdier variant via forced tool call — a deliberate progression.
@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from config import bedrock_client, settings
 from models import ProfileSummary
 
-SYSTEM_PROMPT_V1 = """Du verdichtest Nutzersignale eines Reiseportals zu einem Profil.
+SYSTEM_PROMPT_V1 = """Du fasst Nutzersignale eines Reiseportals zu einem Profil zusammen.
 Antworte NUR mit einem JSON-Objekt nach diesem Schema, ohne Markdown:
 {"interests": ["max 5 einzelne kleingeschriebene woerter, z.B. strand, familie"],
  "persona_summary": "max 2 Saetze",
@@ -42,7 +42,7 @@ def _strip_code_fence(raw: str) -> str:
     return text
 
 
-def condense(signal_lines: list[str]) -> ProfileSummary:
+def summarize_profile(signal_lines: list[str]) -> ProfileSummary:
     hint: str | None = None
     for _ in range(2):
         raw = _ask(signal_lines, hint)

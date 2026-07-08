@@ -55,9 +55,9 @@ Kontrast zur Katastrophe aus Übung 01 ziehen: TravelMate rief das LLM synchron 
 
 | # | GenAI-Einsatz | Warum ein LLM (und nicht Code)? | Wann |
 |---|---|---|---|
-| 1 | **Interessen-Verdichtung:** Roh-Signale (Suchtexte, Buchungen) → strukturiertes Profil (`interests`, `persona_summary`) | Freitext-Suchen wie "warm im november nicht teuer mit kindern" versteht kein Regelwerk zuverlässig | Async, nach N neuen Events (Batching = Kostenkontrolle) |
-| 2 | **Profil-Embedding:** Interessen-Text → Vektor → Neo4j Vector Index | Ähnlichkeit statt Gleichheit: "Strandurlaub" matcht "Küstenwanderung" | Direkt nach jeder Verdichtung |
-| 3 | **Empfehlungen:** Top-k Angebote, deren Beschreibungs-Embeddings dem Profil-Vektor am nächsten sind (Kapitel-05-Store!) | Kein Kaltstart-Regelwerk; ein neues Angebot ist sofort empfehlbar | Beim Verdichten materialisiert |
+| 1 | **Interessen-Summarization** (das LLM fasst viele Roh-Signale zu einem strukturierten Profil zusammen): Roh-Signale (Suchtexte, Buchungen) → strukturiertes Profil (`interests`, `persona_summary`) | Freitext-Suchen wie "warm im november nicht teuer mit kindern" versteht kein Regelwerk zuverlässig | Async, nach N neuen Events (Batching = Kostenkontrolle) |
+| 2 | **Profil-Embedding:** Interessen-Text → Vektor → Neo4j Vector Index | Ähnlichkeit statt Gleichheit: "Strandurlaub" matcht "Küstenwanderung" | Direkt nach jeder Summarization |
+| 3 | **Empfehlungen:** Top-k Angebote, deren Beschreibungs-Embeddings dem Profil-Vektor am nächsten sind (Kapitel-05-Store!) | Kein Kaltstart-Regelwerk; ein neues Angebot ist sofort empfehlbar | Bei der Summarization materialisiert |
 
 **Anti-Pattern-Check:** LLM pro GET-Request (teuer, langsam), LLM entscheidet allein ohne Schema-Validierung, Empfehlungen live pro Request berechnen.
 
@@ -77,7 +77,7 @@ Das beantwortet die Frage "wie passt GenAI in eine Profil-API": nicht IN der API
 flowchart LR
     E[Events aus Kap. 04\nSearchSubmitted,\nBookingCreated] --> Q[SQS] --> W[Profil-Worker\nidempotent, Kap. 04]
     W --> R[(Roh-Signale\nDynamoDB)]
-    W -->|nach N Events| L[LLM-Verdichtung\nBedrock converse, Kap. 03]
+    W -->|nach N Events| L[LLM-Summarization\nBedrock converse, Kap. 03]
     L -->|Pydantic-validiert| P[(Profil + Empfehlungen\nDynamoDB)]
     O[(Angebots-Katalog\nNeo4j Vector Index, Kap. 05)] --> M[Top-k Matching]
     P --> M --> P
@@ -87,7 +87,7 @@ flowchart LR
 ```
 
 - Ausgabe des LLM wird **gegen ein Pydantic-Schema validiert**; ungültig ⇒ Retry, dann DLQ-Pfad — nie ungeprüft in die DB
-- Verdichtung erst **ab Schwelle** (z. B. alle 5 Events): Kostenhebel Nummer 1
+- Summarization erst **ab Schwelle** (z. B. alle 5 Events): Kostenhebel Nummer 1
 
 <!--
 Tag 1 · Kapitel 06 · Folie 4/5 (Architektur)
@@ -103,9 +103,9 @@ Jede Box einem Kapitel zuordnen (steht dran) — die Teilnehmer sollen sehen, da
 
 | Etappe | Ergebnis | Baut auf |
 |---|---|---|
-| A | Events fließen: Producer → Queue → idempotenter Worker → Roh-Signale in Postgres | Kap. 04 |
+| A | Events fließen: Producer → Queue → idempotenter Worker → Roh-Signale in DynamoDB | Kap. 04 |
 | B | GET-API liefert Rohprofil (FastAPI, Pydantic-Response) | Kap. 02 |
-| C | LLM-Verdichtung ab Event-Schwelle: Bedrock → validiertes Profil | Kap. 03 |
+| C | LLM-Summarization ab Event-Schwelle: Bedrock → validiertes Profil | Kap. 03 |
 | D | Profil-Embedding + Top-k-Empfehlungen aus dem Angebots-Katalog | Kap. 05 |
 
 - **A + B sind Pflicht**, C + D gestaffelt — wer C nicht erreicht, hat trotzdem eine lauffähige event-getriebene Komponente

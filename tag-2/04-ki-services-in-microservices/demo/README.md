@@ -17,7 +17,7 @@ Live in den `/docs` (Swagger UI) zeigen:
 
 **Wichtige Punkte:**
 
-- [rag.py](rag.py) ist die **Naht**: GraphRAG aus T2/03 könnte die Baseline hier ersetzen, ohne dass sich am Service etwas ändert — genau dafür kapseln wir.
+- [rag.py](rag.py) ist der **Austauschpunkt**: GraphRAG aus T2/03 könnte die Baseline hier ersetzen, ohne dass sich am Service etwas ändert — genau dafür kapseln wir.
 - [service.py](service.py): Throttling wird zu **503 + `Retry-After`** (Header gehören in die `HTTPException` — auf dem `Response`-Objekt gehen sie bei Fehlern verloren); `refused` ist **200**, kein Fehler.
 - Der Throttling-Test braucht kein echtes Throttling: `monkeypatch` ersetzt `rag.answer` — Fehlerpfade müssen testbar sein, ohne den Fehler zu provozieren.
 - Die eine `print`-Zeile pro Request (request_id, Modell, Tokens, Latenz) ist der Rohstoff für Tag 3 — aus ihr wird morgen ein OTel-Span.

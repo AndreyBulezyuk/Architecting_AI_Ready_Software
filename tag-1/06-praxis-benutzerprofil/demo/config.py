@@ -24,9 +24,9 @@ class ProfileSettings(BaseSettings):
     max_receive_count: int = 3
     visibility_timeout_seconds: int = 5
 
-    # LLM condensation: cheap tier, id verified July 2026 (override via env)
+    # LLM summarization: cheap tier, id verified July 2026 (override via env)
     bedrock_model_id: str = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
-    condense_threshold: int = 5  # condense once a user has >= N fresh signals
+    summarize_threshold: int = 5  # summarize once a user has >= N fresh signals
 
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_user: str = "neo4j"

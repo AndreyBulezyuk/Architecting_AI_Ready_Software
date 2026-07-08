@@ -58,6 +58,10 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 - [Lösung T2/04](../tag-2/04-ki-services-in-microservices/loesung/README.md) — `tag-2/04-ki-services-in-microservices/loesung/README.md`
 - [KI-Services in Microservice-Landschaften](../tag-2/04-ki-services-in-microservices/theorie.md) — `tag-2/04-ki-services-in-microservices/theorie.md`
 - [Übung T2/04 — Euer Retrieval wird ein Service (sync + async)](../tag-2/04-ki-services-in-microservices/uebung.md) — `tag-2/04-ki-services-in-microservices/uebung.md`
+- [Demo T2/05 — Ein Agent, der selbst entscheidet](../tag-2/05-agenten-orchestrierung/demo/README.md) — `tag-2/05-agenten-orchestrierung/demo/README.md`
+- [Lösung T2/05](../tag-2/05-agenten-orchestrierung/loesung/README.md) — `tag-2/05-agenten-orchestrierung/loesung/README.md`
+- [Agenten & Orchestrierung](../tag-2/05-agenten-orchestrierung/theorie.md) — `tag-2/05-agenten-orchestrierung/theorie.md`
+- [Übung T2/05 — Eigene Tools & Datenbank-Zugriff via MCP](../tag-2/05-agenten-orchestrierung/uebung.md) — `tag-2/05-agenten-orchestrierung/uebung.md`
 - [Tag 2 — GraphRAG & KI-zentrierte Services](../tag-2/README.md) — `tag-2/README.md`
 
 ## Tag 3

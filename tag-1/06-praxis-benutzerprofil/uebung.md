@@ -12,7 +12,7 @@
 ## Etappe A — Event-Ingest & Roh-Signale (~40 min)
 
 1. EventBridge-Rule + Queue `t06-<name>-profile-events` (+ DLQ) + Worker (idempotent! Dedup-Muster aus Übung 04).
-2. Der Worker schreibt pro Event ein Item in eine DynamoDB-Tabelle `profile_signals` (Partition Key `user_id`, Sort Key `signal_id` = `event_id`) — dazu `kind` (`SearchSubmitted`/`BookingCreated`), `payload`, `occurred_at` und ein Flag `condensed=false`.
+2. Der Worker schreibt pro Event ein Item in eine DynamoDB-Tabelle `profile_signals` (Partition Key `user_id`, Sort Key `signal_id` = `event_id`) — dazu `kind` (`SearchSubmitted`/`BookingCreated`), `payload`, `occurred_at` und ein Flag `summarized=false`.
 3. Producer-Skript `simulate_user.py`: publiziert für eine `user_id` 5 gemischte Events (nutzt eure Modelle `SearchSubmitted`/`BookingCreated` aus Übung 04).
 
 **Fertig, wenn:** ein pytest beweist: 6 publizierte Events (davon 1 Duplikat) ⇒ genau 5 Items in `profile_signals`. (Wie erzwingt DynamoDB die Dedup ohne vorheriges `get_item`? → `ConditionExpression`.)
@@ -25,12 +25,14 @@
 
 **Fertig, wenn:** `uv run fastapi dev` läuft und ein pytest mit [`TestClient`](https://fastapi.tiangolo.com/tutorial/testing/) 200- und 404-Fall abdeckt. **Kein LLM-Call in diesem Pfad.**
 
-## Etappe C — LLM-Verdichtung (~45 min)
+## Etappe C — LLM-Summarization (~45 min)
+
+**Begriff:** *Summarization* = das LLM fasst viele Roh-Signale (Suchtexte, Buchungen) zu einem strukturierten, validierten Profil zusammen — der etablierte Fachbegriff für diesen Schritt.
 
 1. Pydantic-Schema `ProfileSummary` (`interests: list[str]` max. 5, `persona_summary: str` max. 2 Sätze, `travel_style: Literal["budget","comfort","luxury","unknown"]`).
-2. Funktion `condense_profile(user_id)`: liest alle Signale, baut einen Prompt ("Antworte NUR mit JSON nach diesem Schema …"), ruft Bedrock `converse` auf (Muster aus Übung 03, Modell-ID aus der Env) und validiert mit `model_validate_json`.
-3. Ungültiges JSON ⇒ **ein** Retry mit Fehlerhinweis im Prompt, danach aufgeben und loggen.
-4. Der Worker aus Etappe A stößt die Verdichtung an, sobald ein Nutzer ≥ 5 unverdichtete Signale hat; Ergebnis landet in einer DynamoDB-Tabelle `user_profiles` (`user_id`, `interests`, `persona_summary`, `travel_style`, `updated_at`), die Signale werden als `condensed=true` markiert. Die API liefert das Profil aus.
+2. Funktion `summarize_profile(user_id)`: liest alle Signale, baut einen Prompt ("Antworte NUR mit JSON nach diesem Schema …"), ruft Bedrock `converse` auf (Muster aus Übung 03, Modell-ID aus der Env) und validiert mit `model_validate_json`.
+3. Ungültiges JSON ⇒ **ein** Retry mit Fehlerhinweis im Prompt, danach aufgeben und loggen. **Bekannte Falle:** Claude wickelt das JSON gern in einen ```json-Code-Fence — den müsst ihr vor `model_validate_json` entfernen; bei `temperature=0` kommt im Retry deterministisch dieselbe Antwort, der Retry allein rettet euch also nicht.
+4. Der Worker aus Etappe A stößt die Summarization an, sobald ein Nutzer ≥ 5 Signale ohne `summarized`-Flag hat; Ergebnis landet in einer DynamoDB-Tabelle `user_profiles` (`user_id`, `interests`, `persona_summary`, `travel_style`, `updated_at`), die Signale werden als `summarized=true` markiert. Die API liefert das Profil aus.
 
 **Fertig, wenn:** `simulate_user.py` + Worker-Lauf ⇒ `GET /user_profiles/{id}` zeigt echte, vom LLM extrahierte Interessen.
 **Recherche:** Wie erzwingt man knappe, deterministische Antworten? (`temperature`, `maxTokens` in [`inferenceConfig`](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-parameters.html))
@@ -38,7 +40,7 @@
 ## Etappe D — Embedding & Empfehlungen (~30 min)
 
 1. Seed-Skript legt ~20 Reiseangebote als `:Offer`-Knoten in Neo4j an (Beschreibungstext, embedded, eigener Vector Index — Kapitel-05-Muster).
-2. Nach jeder Verdichtung: `interests` als Text embedden (Fake-Embedding aus Kapitel 05 — **gleiche Funktion wie der Katalog!**) und Top-3-Angebote per `db.index.vector.queryNodes` ins Profil-Item materialisieren (`recommendations`).
+2. Nach jeder Summarization: `interests` als Text embedden (Fake-Embedding aus Kapitel 05 — **gleiche Funktion wie der Katalog!**) und Top-3-Angebote per `db.index.vector.queryNodes` ins Profil-Item materialisieren (`recommendations`).
 3. API-Response um `recommendations` erweitern.
 
 **Fertig, wenn:** Ein Nutzer, der nur nach Strand sucht, bekommt erkennbar Strand-Angebote — und die API bleibt schnell, weil alles vorberechnet ist (kein LLM, kein Embedding im GET-Pfad).

@@ -106,7 +106,7 @@ Zwei Wege, JSON aus dem Modell zu bekommen:
 
 | Ansatz | Mechanik | Verlässlichkeit |
 |---|---|---|
-| "Antworte nur mit JSON …" | Prompt-Disziplin | fragil: Markdown-Zäune, Plaudertext, fehlende Felder |
+| "Antworte nur mit JSON …" | Prompt-Disziplin | fragil: ```json-Code-Fences, Fließtext drumherum, fehlende Felder |
 | **Erzwungener Tool-Call** | `toolConfig` + [`toolChoice: {tool: …}`](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use.html) — Schema direkt aus `model_json_schema()` | Modell **muss** das Schema bedienen |
 
 ```python
