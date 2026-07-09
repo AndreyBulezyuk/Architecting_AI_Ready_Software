@@ -66,6 +66,14 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 
 ## Tag 3
 
+- [Demo T3/01 — Der T2/04-Service wird beobachtbar](../tag-3/01-observability/demo/README.md) — `tag-3/01-observability/demo/README.md`
+- [Lösung T3/01](../tag-3/01-observability/loesung/README.md) — `tag-3/01-observability/loesung/README.md`
+- [Observability für KI-Komponenten](../tag-3/01-observability/theorie.md) — `tag-3/01-observability/theorie.md`
+- [Übung T3/01 — Den T2/05-Agenten tracen](../tag-3/01-observability/uebung.md) — `tag-3/01-observability/uebung.md`
+- [Demo T3/02 — Die T2/02-Baseline mit Ragas bewerten](../tag-3/02-evaluation-qualitaet/demo/README.md) — `tag-3/02-evaluation-qualitaet/demo/README.md`
+- [Lösung T3/02](../tag-3/02-evaluation-qualitaet/loesung/README.md) — `tag-3/02-evaluation-qualitaet/loesung/README.md`
+- [Evaluation & Qualität](../tag-3/02-evaluation-qualitaet/theorie.md) — `tag-3/02-evaluation-qualitaet/theorie.md`
+- [Übung T3/02 — Ist GraphRAG wirklich besser? Messt es.](../tag-3/02-evaluation-qualitaet/uebung.md) — `tag-3/02-evaluation-qualitaet/uebung.md`
 - [Tag 3 — Production-Readiness, Sicherheit & Kosten](../tag-3/README.md) — `tag-3/README.md`
 
 ## Infrastructure

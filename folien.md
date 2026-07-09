@@ -57,3 +57,11 @@ src: ./tag-2/04-ki-services-in-microservices/theorie.md
 ---
 src: ./tag-2/05-agenten-orchestrierung/theorie.md
 ---
+
+---
+src: ./tag-3/01-observability/theorie.md
+---
+
+---
+src: ./tag-3/02-evaluation-qualitaet/theorie.md
+---

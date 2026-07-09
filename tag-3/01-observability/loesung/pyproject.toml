@@ -1,0 +1,31 @@
+[project]
+name = "observability-loesung"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.35",
+    "botocore[crt]>=1.35",
+    "neo4j>=5.28",
+    "opentelemetry-exporter-otlp-proto-http>=1.27",
+    "opentelemetry-sdk>=1.27",
+    "pydantic-settings>=2.6",
+    "strands-agents>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "boto3-stubs[bedrock-runtime]>=1.35",
+    "pyright>=1.1.390",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

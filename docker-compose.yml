@@ -58,14 +58,19 @@ services:
       - "3000:3000"
     environment: &langfuse_env
       DATABASE_URL: postgresql://postgres:trainingpass@langfuse-postgres:5432/langfuse
-      SALT: training-salt-not-for-production
-      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
-      NEXTAUTH_SECRET: training-secret-not-for-production
+      SALT: "training-salt-not-for-production"
+      # training-only placeholder (64 hex chars = 256 bit, quoted — an unquoted
+      # all-digit YAML value gets parsed as a number and silently truncated)
+      ENCRYPTION_KEY: "d384028fa5736576517430fa1dd72ffa30d1279119ad87b12545df79b6a0f77e"
+      NEXTAUTH_SECRET: "training-secret-not-for-production"
       NEXTAUTH_URL: http://localhost:3000
       CLICKHOUSE_URL: http://clickhouse:8123
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: trainingpass
+      # single-node ClickHouse has no Zookeeper — without this Langfuse tries
+      # `CREATE TABLE ... ON CLUSTER default` and fails at migration time
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
@@ -74,6 +79,17 @@ services:
       LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: trainingpass
       LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
       LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      # headless init: fixed org/project/user/keys so no manual signup is needed
+      # in class — same keys every `docker compose up`, see langfuse.com/self-hosting/administration/headless-initialization
+      LANGFUSE_INIT_ORG_ID: training-org
+      LANGFUSE_INIT_ORG_NAME: Training
+      LANGFUSE_INIT_PROJECT_ID: training-project
+      LANGFUSE_INIT_PROJECT_NAME: ai-ready-training
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-training-0000000000000000
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-training-0000000000000000
+      LANGFUSE_INIT_USER_EMAIL: trainer@example.com
+      LANGFUSE_INIT_USER_NAME: Trainer
+      LANGFUSE_INIT_USER_PASSWORD: trainingpass
 
   langfuse-worker:
     image: langfuse/langfuse-worker:3
