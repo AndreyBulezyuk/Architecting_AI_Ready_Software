@@ -74,6 +74,18 @@ Alle Markdown-Dokumente des Repos. Generiert — bei Änderungen neu erzeugen mi
 - [Lösung T3/02](../tag-3/02-evaluation-qualitaet/loesung/README.md) — `tag-3/02-evaluation-qualitaet/loesung/README.md`
 - [Evaluation & Qualität](../tag-3/02-evaluation-qualitaet/theorie.md) — `tag-3/02-evaluation-qualitaet/theorie.md`
 - [Übung T3/02 — Ist GraphRAG wirklich besser? Messt es.](../tag-3/02-evaluation-qualitaet/uebung.md) — `tag-3/02-evaluation-qualitaet/uebung.md`
+- [Demo T3/03 — Bedrock Guardrails in Aktion](../tag-3/03-sicherheit/demo/README.md) — `tag-3/03-sicherheit/demo/README.md`
+- [Lösung T3/03](../tag-3/03-sicherheit/loesung/README.md) — `tag-3/03-sicherheit/loesung/README.md`
+- [Sicherheit für KI-Komponenten](../tag-3/03-sicherheit/theorie.md) — `tag-3/03-sicherheit/theorie.md`
+- [Übung T3/03 — Eigener Guardrail & Abwehr indirekter Prompt-Injection](../tag-3/03-sicherheit/uebung.md) — `tag-3/03-sicherheit/uebung.md`
+- [Demo T3/04 — Was ein Token kostet](../tag-3/04-kosten-finops/demo/README.md) — `tag-3/04-kosten-finops/demo/README.md`
+- [Lösung T3/04](../tag-3/04-kosten-finops/loesung/README.md) — `tag-3/04-kosten-finops/loesung/README.md`
+- [Kosten & FinOps](../tag-3/04-kosten-finops/theorie.md) — `tag-3/04-kosten-finops/theorie.md`
+- [Übung T3/04 — Kosten-Report für einen Workload](../tag-3/04-kosten-finops/uebung.md) — `tag-3/04-kosten-finops/uebung.md`
+- [Demo T3/05 — Neo4j auf EC2 als Infrastructure-as-Code](../tag-3/05-deployment-betrieb/demo/README.md) — `tag-3/05-deployment-betrieb/demo/README.md`
+- [Lösung T3/05](../tag-3/05-deployment-betrieb/loesung/README.md) — `tag-3/05-deployment-betrieb/loesung/README.md`
+- [Deployment & Betrieb](../tag-3/05-deployment-betrieb/theorie.md) — `tag-3/05-deployment-betrieb/theorie.md`
+- [Übung T3/05 — Den Deployment-Stack erweitern & beweisen](../tag-3/05-deployment-betrieb/uebung.md) — `tag-3/05-deployment-betrieb/uebung.md`
 - [Tag 3 — Production-Readiness, Sicherheit & Kosten](../tag-3/README.md) — `tag-3/README.md`
 
 ## Infrastructure

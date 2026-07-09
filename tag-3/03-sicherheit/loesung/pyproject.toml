@@ -1,0 +1,31 @@
+[project]
+name = "security-loesung"
+version = "0.1.0"
+description = "Solution tag-3/03: own guardrail + indirect prompt-injection defence via document scanning"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.35",
+    "boto3-stubs[bedrock]>=1.43.44",
+    "botocore[crt]>=1.35",
+    "fastapi[standard]>=0.115",
+    "neo4j>=5.28",
+    "pydantic-settings>=2.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+    "boto3-stubs[bedrock-runtime]>=1.35",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

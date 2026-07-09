@@ -1,0 +1,29 @@
+[project]
+name = "finops-loesung"
+version = "0.1.0"
+description = "Solution tag-3/04: cost report over a question mix with router + caching + tiering"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.35",
+    "botocore[crt]>=1.35",
+    "neo4j>=5.28",
+    "pydantic-settings>=2.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+    "boto3-stubs[bedrock-runtime]>=1.35",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -65,3 +65,15 @@ src: ./tag-3/01-observability/theorie.md
 ---
 src: ./tag-3/02-evaluation-qualitaet/theorie.md
 ---
+
+---
+src: ./tag-3/03-sicherheit/theorie.md
+---
+
+---
+src: ./tag-3/04-kosten-finops/theorie.md
+---
+
+---
+src: ./tag-3/05-deployment-betrieb/theorie.md
+---
