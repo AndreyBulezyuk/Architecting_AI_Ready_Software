@@ -1,6 +1,6 @@
 # Demo T2/02 — Echte Embeddings auf dem bekannten Store
 
-Ablauf (~15 min), lokaler Postgres + echtes Bedrock (Embeddings kosten Bruchteile eines Cents):
+Ablauf (~15 min), lokales Neo4j + echtes Bedrock (Embeddings kosten Bruchteile eines Cents):
 
 ```bash
 cd tag-2/02-dokumentenpipeline-embeddings/demo

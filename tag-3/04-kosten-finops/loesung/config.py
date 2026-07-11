@@ -1,4 +1,4 @@
-"""Settings: local postgres for vectors, real Bedrock for embeddings."""
+"""Settings: local Neo4j vector index, real Bedrock for embeddings."""
 
 import os
 from typing import TYPE_CHECKING

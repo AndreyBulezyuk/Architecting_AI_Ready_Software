@@ -1,7 +1,7 @@
 [project]
 name = "setup-lokal-loesung"
 version = "0.1.0"
-description = "Solution for exercise tag-1/02: DynamoDB, pgvector and Neo4j against the local stack"
+description = "Solution for exercise tag-1/02: DynamoDB and Neo4j (vector index + graph) against the local stack"
 requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.35",

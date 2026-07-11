@@ -187,7 +187,7 @@ flowchart LR
     U[Client] --> API[FastAPI\nServices]
     API --> EV[EventBridge\n+ SQS]
     EV --> P[Profil-Komponente\nTag 1]
-    P --> DB[(Postgres\n+ pgvector)]
+    P --> DB[(DynamoDB\nProfile)]
     API --> R[GraphRAG-Service\nTag 2]
     R --> KG[(Neo4j\nKnowledge Graph)]
     R --> A[Agent · Strands\nTag 2]

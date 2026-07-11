@@ -33,7 +33,3 @@ def embed_documents(texts: list[str]) -> list[list[float]]:
 
 def embed_query(text: str) -> list[float]:
     return _embed([text], "search_query")[0]
-
-
-def to_pgvector(vector: list[float]) -> str:
-    return "[" + ", ".join(f"{component:.6f}" for component in vector) + "]"

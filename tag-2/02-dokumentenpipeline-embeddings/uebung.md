@@ -1,7 +1,7 @@
 # Übung T2/02 — Chunking messen & die RAG-Baseline fertigbauen
 
 **Ziel:** Retrieval-Qualität **messen** statt raten — und die Vector-RAG-Baseline bauen, gegen die morgen GraphRAG antreten muss.
-**Zeit:** ~90 min. **Voraussetzung:** Demo T2/02 gesehen; Postgres läuft; AWS-Profil aktiv.
+**Zeit:** ~90 min. **Voraussetzung:** Demo T2/02 gesehen; Neo4j läuft; AWS-Profil aktiv.
 
 ## Teil 1 — Nachziehen (≈10 min)
 

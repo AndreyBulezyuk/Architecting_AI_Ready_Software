@@ -80,7 +80,7 @@ def test_b_profile_aggregates_signals() -> None:
     assert body["last_seen_at"]  # ISO timestamp of the newest signal
 
 
-def test_cd_condensed_profile_with_recommendations() -> None:
+def test_cd_summarized_profile_with_recommendations() -> None:
     body = client.get(f"/user_profiles/{user_id}").json()
     assert 1 <= len(body["interests"]) <= 5
     assert body["travel_style"] in {"budget", "comfort", "luxury", "unknown"}

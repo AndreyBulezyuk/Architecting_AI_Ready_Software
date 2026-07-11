@@ -26,7 +26,7 @@ flowchart LR
     VAL --> C
     API -->|Event| EB[EventBridge]
     EB --> SQ1[SQS] --> REC[Empfehlungs-Worker]
-    REC --> PROF[(Profil-Store\nDynamoDB/pgvector)]
+    REC --> PROF[(Profil-Store\nDynamoDB)]
     EB --> SQ2[SQS] --> SUM[Ticket-Summary-Worker]
     SUM --> TDB[(Ticket-DB)]
     QA -.Traces.-> OBS[Langfuse/OTel]
@@ -39,7 +39,7 @@ flowchart LR
 **Zu den Leitfragen:**
 
 1. **Sync vs. async:** Der Q&A-Assistent bleibt synchron (Nutzer wartet auf Antwort — aber mit Streaming und Timeout-Budget). Empfehlungen und Ticket-Zusammenfassungen sind asynchron: Sie haben keinen wartenden Nutzer, vertragen Verzögerung und profitieren von Retry/DLQ und Batch-Verarbeitung (Kosten).
-2. **Datenablagen:** Reiseberichte → Neo4j als Knowledge Graph (Berichte, Ziele, Themen, Autoren + Vector Index für semantische Suche); Nutzerprofile/Empfehlungen → Key-Value (DynamoDB) oder pgvector-Tabelle für Ähnlichkeitssuche; bestehende relationale Daten bleiben in PostgreSQL.
+2. **Datenablagen:** Reiseberichte → Neo4j als Knowledge Graph (Berichte, Ziele, Themen, Autoren + Vector Index für semantische Suche); Nutzerprofile/Empfehlungen → Key-Value (DynamoDB); Ähnlichkeitssuche über den Neo4j Vector Index (dieselbe DB wie der Graph); bestehende relationale Daten dürfen im Legacy-PostgreSQL bleiben (Migration in Etappen).
 3. **Guardrails:** (a) Output-Schema-Validierung (Pydantic) direkt nach jedem LLM-Call, (b) Content-Filter/Guardrail vor Auslieferung an den Client, (c) niemals LLM-Output als rohes HTML rendern.
 
 ## Teil 3 — Antwort an den CTO

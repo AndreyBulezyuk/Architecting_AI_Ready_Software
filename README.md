@@ -94,7 +94,7 @@ flowchart LR
 
 **Kosten:** Alle Standard-Services sind nutzungsbasiert (3 Tage ≈ einstelliger Euro-Betrag pro Teilnehmer, größter Posten Bedrock-Tokens). Einzige Stundenpreis-Ressource ist die Neo4j-EC2-Instanz (~0,50 $/Tag) — **nach jedem Schulungstag zerstören**; Kostenfallen-Liste im [Kosten-Radar](tag-1/03-setup-aws/trainer.md).
 
-**Rolle von LocalStack (bewusst begrenzt):** Warm-up vor dem AWS-Zugang (Kapitel 02), Substrat für schnelle pytest-Läufe und Offline-Fallback. Ab Kapitel 04 ist **echtes AWS der Primärweg** — LocalStack erzwingt kein IAM und kennt kein Bedrock; Rechte- und Policy-Fehler zeigen sich nur in der echten Cloud. Postgres und Neo4j sind davon unabhängig: die laufen lokal nativ im Container, ohne Emulation.
+**Rolle von LocalStack (bewusst begrenzt):** Warm-up vor dem AWS-Zugang (Kapitel 02), Substrat für schnelle pytest-Läufe und Offline-Fallback. Ab Kapitel 04 ist **echtes AWS der Primärweg** — LocalStack erzwingt kein IAM und kennt kein Bedrock; Rechte- und Policy-Fehler zeigen sich nur in der echten Cloud. Neo4j ist davon unabhängig: es läuft lokal nativ im Container, ohne Emulation.
 
 ### Infrastructure as Code
 
@@ -128,13 +128,13 @@ flowchart LR
 2. **02-setup-lokal** *(geführt)* — uv, Projektstruktur, `docker-compose.yml`, LocalStack, Smoke-Tests
 3. **03-setup-aws** *(geführt)* — AWS-Konto/SSO, CDK Bootstrap, Bedrock Model Access, erster `cdk deploy`
 4. **04-event-driven-ki-workloads** — EventBridge/SQS-Patterns für KI-Workloads (async, Retry, DLQ, Idempotenz)
-5. **05-daten-zentrierte-persistenz** — Persistenzkonzepte für AI-Ready-Anwendungen: Postgres/pgvector, DynamoDB, S3; Embedding-Lifecycle
+5. **05-daten-zentrierte-persistenz** — Persistenzkonzepte für AI-Ready-Anwendungen: Neo4j Vector Index, DynamoDB, S3; Embedding-Lifecycle
 6. **06-praxis-benutzerprofil** — Praxisbeispiel der Agenda: event-getriebene Benutzerprofil-Komponente für KI-Personalisierung (ganztags-übergreifende Übung, führt Kapitel 4+5 zusammen)
 
 ### Tag 2 — GraphRAG & KI-zentrierte Services (`tag-2/`)
 
 1. **01-genai-anwendungsarchitektur** — Bausteine einer GenAI-Anwendung; Bedrock-Modellwahl; Prompt-/Context-Design; strukturierte Outputs
-2. **02-dokumentenpipeline-embeddings** — Chunking, Embeddings, Indizes, Query-Flow; Vector-RAG als Baseline (pgvector)
+2. **02-dokumentenpipeline-embeddings** — Chunking, Embeddings, Indizes, Query-Flow; Vector-RAG als Baseline (Neo4j Vector Index)
 3. **03-graphrag** — Knowledge-Graph-Aufbau mit `neo4j-graphrag` (Entity-/Relation-Extraktion), Hybrid Retrieval (Graph + Vektor), Vergleich zur Baseline
 4. **04-ki-services-in-microservices** — GraphRAG als FastAPI-Service; Integration in Microservice-Landschaften; Domänenmodell ↔ KI-Komponente
 5. **05-agenten-orchestrierung** — KI-Funktionen und Agenten orchestrieren: Strands Agents, Tools via MCP; Service-Mesh vs. Orchestrierungs-Framework
