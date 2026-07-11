@@ -36,6 +36,7 @@ Idempotenz für den Async-Pfad: Der Consumer schickt dieselbe Frage doppelt ab. 
 
 1. Der Agent in Kapitel 05 wird euren Service als Tool aufrufen. Welche drei Eigenschaften eures Vertrags machen ihn agententauglich?
 2. Wo würdet ihr den Service in eurer echten Landschaft deployen (Gateway, Mesh, AuthN) — und was daran ist KI-spezifisch? (Erwartete Antwort: fast nichts.)
+3. Euer `worker.py` pollt hier in einer Schleife. In Produktion schreibt man diesen Poll-Loop meist **gar nicht** selbst (Theorie-Folie 7): Wann nehmt ihr **SQS → Lambda** (Event Source Mapping) und wann **ECS/Fargate**? Und warum ist FastAPI der falsche Ort für diese Hintergrundarbeit?
 
 ## Hinweise
 

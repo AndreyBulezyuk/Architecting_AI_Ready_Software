@@ -1,4 +1,4 @@
-"""Chunking is tested offline; ingest/search run live against Bedrock + local postgres."""
+"""Chunking is tested offline; ingest/search run live against Bedrock + local Neo4j."""
 
 import botocore.exceptions
 import pytest

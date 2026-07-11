@@ -12,7 +12,7 @@ mdc: false
 Zentrales Repo der 3-tägigen Schulung **"Architecting AI-Ready Applications – Softwarearchitektur für KI-Systeme"**.
 Offizielle Agenda: [docs/agenda.md](docs/agenda.md) · **Alle Dokumente: [docs/inhalt.md](docs/inhalt.md)**
 
-> **Status: Planung.** Dieses README hält die Stack- und Strukturentscheidungen fest. Die Kapitelinhalte (Theorie, Demos, Übungen) werden auf dieser Basis erstellt.
+> **Status: Inhaltlich fertig.** Alle 16 Kapitel (3 Tage) haben `theorie.md` (Slidev-Deck), `demo/`, `uebung.md` und `loesung/` — der Code ist live gegen AWS/Bedrock bzw. per CDK-Assertion getestet. Dieses README hält die Stack- und Strukturentscheidungen fest; offene Vor-der-Schulung-Punkte stehen in `.claude/TODOs.md`.
 
 ---
 
