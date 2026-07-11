@@ -149,17 +149,61 @@ flowchart LR
 
 ## Repository-Struktur
 
-```text
-.
-├── README.md                  # Dieses Dokument (Planung & Entscheidungen)
-├── docker-compose.yml         # Lokaler Stack: Neo4j, Postgres/pgvector, LocalStack (+ Profil: Langfuse)
-├── package.json               # Folien (Slidev) + CDK-CLI — npm install einmalig
-├── docs/
-│   └── agenda.md              # Offizielle Agenda + Mapping
-├── infrastructure/            # AWS CDK App (Python, eigenes uv-Projekt)
-├── shared/                    # Gemeinsamer Code (Clients, Settings, Testdaten)
-├── scripts/                   # Hilfsskripte (Seed-Daten, Checks)
-├── tag-1/  tag-2/  tag-3/     # Kapitel: NN-name/{theorie.md, demo/, uebung.md, loesung/[, trainer.md]}
+
+```
+Architecting_AI_Ready_Software/
+├── .claude/                    # Claude AI configuration files
+├── .gitignore                  # Git ignore rules
+├── docker-compose.yml          # Docker Compose configuration
+├── package.json                # Node.js package configuration
+├── package-lock.json           # Node.js dependency lock file
+├── README.md                   # Project readme
+├── folien.md                   # Presentation/slides (German)
+│
+├── docs/                       # Documentation
+│   ├── agenda.md               # Workshop agenda
+│   └── inhalt.md               # Content/outline
+│
+├── scripts/                    # Utility scripts
+│   ├── .gitkeep
+│   └── update_inhalt.py        # Script to update content
+│
+├── shared/                     # Shared resources (currently empty)
+│   └── .gitkeep
+│
+├── tag-1/                      # Day 1: Foundation
+│   ├── 01-architektur-fuer-ki/ # AI architecture fundamentals
+│   ├── 02-setup-lokal/         # Local development setup
+│   ├── 03-setup-aws/           # AWS environment setup
+│   ├── 04-event-driven-ki-workloads/  # Event-driven AI workloads
+│   ├── 05-daten-zentrierte-persistenz/ # Data-centric persistence
+│   └── 06-praxis-benutzerprofil/       # Practical user profile
+│
+├── tag-2/                      # Day 2: Advanced Topics
+│   ├── 01-genai-anwendungsarchitektur/ # GenAI application architecture
+│   ├── 02-dokumentenpipeline-embeddings/ # Document pipeline & embeddings
+│   ├── 03-graphrag/            # Graph RAG implementation
+│   ├── 04-ki-services-in-microservices/ # AI services in microservices
+│   └── 05-agenten-orchestrierung/       # Agent orchestration
+│
+├── tag-3/                      # Day 3: Operations & Production
+│   ├── 01-observability/       # Observability & monitoring
+│   ├── 02-evaluation-qualitaet/ # Evaluation & quality
+│   ├── 03-sicherheit/          # Security
+│   ├── 04-kosten-finops/       # Cost management & FinOps
+│   ├── 05-deployment-betrieb/  # Deployment & operations
+│   └── 06-kinesis-optional/    # Kinesis (optional)
+│
+└── infrastructure/             # AWS CDK Infrastructure as Code
+    ├── app.py                  # CDK application entry point
+    ├── cdk.json                # CDK configuration
+    ├── cdk.out/                # CDK build artifacts
+    ├── pyproject.toml          # Python project configuration
+    ├── uv.lock                 # UV package manager lock file
+    ├── README.md               # Infrastructure documentation
+    └── stacks/                 # CDK stack definitions
+        ├── __init__.py
+        └── base_stack.py       # Base infrastructure stack
 ```
 
 
