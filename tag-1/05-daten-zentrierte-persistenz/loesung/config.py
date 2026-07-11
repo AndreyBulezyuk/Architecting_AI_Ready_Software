@@ -30,7 +30,7 @@ settings = StoreSettings()
 
 
 def _session() -> boto3.Session:
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     return boto3.Session(profile_name=profile, region_name=settings.aws_region)
 
 

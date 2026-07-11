@@ -1,9 +1,9 @@
 """Bedrock connection settings.
 
-Model ids are config, never code (tag-1/03). The defaults are inference profiles
-verified in the training account (July 2026) — always re-check with:
+Model ids are config, never code (tag-1/03). The defaults are verified in the
+training account (July 2026) — always re-check with:
     aws bedrock list-inference-profiles --region eu-west-1 \
-        --query 'inferenceProfileSummaries[?contains(inferenceProfileId, `eu.anthropic.claude`)].inferenceProfileId'
+        --query 'inferenceProfileSummaries[?contains(inferenceProfileId, `amazon.nova`)].inferenceProfileId'
 """
 
 import os
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class BedrockSettings(BaseSettings):
     aws_region: str = "eu-west-1"
     # cheap+fast tier for extraction/classification (override via env BEDROCK_MODEL_ID)
-    bedrock_model_id: str = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    bedrock_model_id: str = "eu.amazon.nova-lite-v1:0"
 
 
 settings = BedrockSettings()
@@ -27,6 +27,6 @@ settings = BedrockSettings()
 
 def bedrock_client() -> "BedrockRuntimeClient":
     # profile binding as in tag-1/03: the `aws login` provider needs botocore[crt]
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     session = boto3.Session(profile_name=profile, region_name=settings.aws_region)
     return session.client("bedrock-runtime")  # pyright: ignore[reportUnknownMemberType]

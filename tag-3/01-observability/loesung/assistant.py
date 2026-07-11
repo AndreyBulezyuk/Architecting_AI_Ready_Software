@@ -43,7 +43,7 @@ def list_destinations() -> str:
 
 
 def build_agent() -> Agent:
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     model = BedrockModel(
         boto_session=boto3.Session(profile_name=profile, region_name=settings.aws_region),
         model_id=settings.chat_model_id,

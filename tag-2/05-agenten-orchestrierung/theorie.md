@@ -15,7 +15,7 @@ Das Modell entscheidet, welche Tools es braucht — Strands Agents + MCP
 **Tag 2 · Kapitel 05**
 
 <!--
-Tag 2 · Kapitel 05 · Folie 1/6 (Titel)
+Tag 2 · Kapitel 05 · Folie 1/7 (Titel)
 
 Bogen des Tages schließen: T2/01 Output-Verträge, T2/02-03 Retrieval, T2/04 Service — jetzt dreht sich die Kontrolle um: Bisher rief UNSER Code das LLM; ab jetzt entscheidet das LLM, welchen Code es ruft.
 -->
@@ -42,7 +42,7 @@ flowchart LR
 - Kein Agent nötig, wenn der Ablauf immer gleich ist! RAG-Pipeline (T2/02) bleibt die richtige Wahl für "Frage rein → Antwort raus" — Agenten lohnen sich bei **variablen** Wegen
 
 <!--
-Tag 2 · Kapitel 05 · Folie 2/6 (Was ein Agent ist)
+Tag 2 · Kapitel 05 · Folie 2/7 (Was ein Agent ist)
 
 Anti-Hype-Punkt zuerst: Die RAG-Baseline aus T2/02 ist KEIN Agent und soll auch keiner werden. Agent-Overhead (mehr Calls, weniger Determinismus) muss durch variable Aufgabenwege gerechtfertigt sein.
 -->
@@ -73,44 +73,70 @@ result.metrics.tool_metrics       # welche Tools liefen — beweisbar, testbar!
 
 - [Strands](https://strandsagents.com/docs/) ist model-driven: keine Graphen verdrahten, das Modell führt die Schleife — [AWS-eigenes SDK](https://github.com/strands-agents/harness-sdk), produktiv u. a. in Amazon Q Developer
 - **Docstring + Typen = Tool-Vertrag**: Davon hängt ab, ob das Modell das Tool richtig benutzt — Tool-Beschreibungen sind Prompt-Engineering
-- `result.metrics`: Tool-Nutzung + Token-Verbrauch pro Lauf — unsere Tests **beweisen** Tool-Einsatz statt ihn zu vermuten
 
 <!--
-Tag 2 · Kapitel 05 · Folie 3/6 (Strands)
+Tag 2 · Kapitel 05 · Folie 3/7 (Strands)
 
-Live-Vergleich zu LangGraph ziehen (eine Folie Rückblick T2-README): Strands = Modell entscheidet; LangGraph = expliziter Graph, wenn deterministische Kontrolle Pflicht ist. Beide legitim — Auswahlkriterium ist, wer den Kontrollfluss besitzen soll.
+Live-Vergleich zu LangGraph ziehen: Strands = Modell entscheidet; LangGraph = expliziter Graph, wenn deterministische Kontrolle Pflicht ist. Beide legitim — Auswahlkriterium ist, wer den Kontrollfluss besitzen soll.
 -->
 
 ---
 
-# MCP: Tools als Standard statt Eigenbau
+# MCP in einer Minute (nicht Kursthema, aber gut zu kennen)
 
 ###### tag-2/05-agenten-orchestrierung · Tag 2 · Kapitel 05
 
-```python
-from mcp import StdioServerParameters, stdio_client
-from strands.tools.mcp import MCPClient
+**[MCP](https://modelcontextprotocol.io/)** (Model Context Protocol): offener Standard, wie ein LLM Werkzeuge und Daten *entdeckt und nutzt* — wie USB-C für KI-Tools.
 
-neo4j_mcp = MCPClient(lambda: stdio_client(StdioServerParameters(
-    command="uvx", args=["mcp-neo4j-cypher"], env={...})))
-with neo4j_mcp:                                    # Session offen halten!
-    agent = Agent(model=model,
-                  tools=[*own_tools, *neo4j_mcp.list_tools_sync()])
-```
+- **MCP-Server** = stellt **Tools** (Aktionen) und **Resources** (lesbare Daten) bereit
+- **MCP-Client** = die Seite am Agenten, die den Server einbindet (Strands, Claude Desktop, IDE …)
 
-- **[MCP](https://modelcontextprotocol.io/)** (Model Context Protocol): offener Standard, wie Tools sich LLMs beschreiben — ein Server, jeder MCP-fähige Agent kann ihn nutzen
-- Der [offizielle Neo4j-MCP-Server](https://neo4j.com/docs/mcp/current/) gibt dem Agenten Schema-Zugriff + Cypher: **der Agent schreibt seine Datenbank-Queries selbst** (Übung!)
-- Grenze ehrlich benannt: MCP-Tools sind so sicher wie ihr Server — dem Agenten **nur Lese-Zugänge** geben; Schreibrechte sind eine Architektur-Entscheidung, kein Default
+| Use Case | Client | Server | Nutzen |
+|---|---|---|---|
+| DB-Zugriff für Agenten | Agent (Strands) | Neo4j-MCP-Server | Agent schreibt Cypher selbst — keine Query von Hand als Tool |
+| Interne API für KI öffnen | Chat-Assistent | eigener MCP-Server um die API | **einmal** bauen, jeder MCP-Client nutzt ihn |
+| Dev-Tools in der IDE | IDE (z. B. Cursor) | GitHub-/Filesystem-Server | Standard statt proprietärem Plugin je Tool |
 
 <!--
-Tag 2 · Kapitel 05 · Folie 4/6 (MCP)
+Tag 2 · Kapitel 05 · Folie 4/7 (MCP in einer Minute)
 
-Der Aha-Moment der Übung: Niemand hat dem Agenten Cypher beigebracht — er holt das Schema über den MCP-Server und formuliert die Query selbst. Danach sofort die Sicherheitsfrage stellen: Wer will das mit Schreibrechten in Produktion? (Niemand.)
+MCP steht nicht in der offiziellen Agenda — deshalb bewusst NUR diese eine Begriffs-Folie plus die Praxis-Folie danach, keine Vertiefung. Kernbild: USB-C für KI-Tools. Client = Agent-Seite, Server = Tool-Anbieter-Seite. Die Tabelle zeigt, WANN sich ein eigener Server lohnt: wenn mehrere Clients dasselbe System brauchen.
 -->
 
 ---
 
-# Orchestrierung: Ein Agent, viele Agenten, oder doch ein Workflow?
+# Ein eigener MCP-Server: einmal bauen, überall nutzen
+
+###### tag-2/05-agenten-orchestrierung · Tag 2 · Kapitel 05
+
+```mermaid
+flowchart LR
+    A[Euer Agent] -->|MCP| S[Eigener MCP-Server]
+    C[Claude Desktop] -->|MCP| S
+    I[IDE] -->|MCP| S
+    S --> SYS[(Interne API /\nDatenbank)]
+    style S fill:#e9f7ef,stroke:#27ae60
+```
+
+```python
+neo4j_mcp = MCPClient(lambda: stdio_client(StdioServerParameters(
+    command="uvx", args=["mcp-neo4j-cypher"], env={...})))
+with neo4j_mcp:                                    # Session offen halten!
+    agent = Agent(model=model, tools=[*own_tools, *neo4j_mcp.list_tools_sync()])
+```
+
+- **Ein Server, viele Clients** — den [offiziellen Neo4j-MCP-Server](https://neo4j.com/docs/mcp/current/) nutzt der Agent in der Übung, ohne eine Zeile Cypher vorzugeben
+- Grenze ehrlich benannt: MCP-Tools sind so sicher wie ihr Server — dem Agenten **nur Lese-Zugänge** geben; Schreibrechte sind eine Architektur-Entscheidung, kein Default
+
+<!--
+Tag 2 · Kapitel 05 · Folie 5/7 (Eigener MCP-Server)
+
+Der Aha-Moment der Übung: Niemand hat dem Agenten Cypher beigebracht — er holt das Schema über den MCP-Server und formuliert die Query selbst. Danach sofort die Sicherheitsfrage: Wer will das mit Schreibrechten in Produktion? (Niemand → read-only Neo4j-User.)
+-->
+
+---
+
+# Orchestrierung: Ein Agent, viele Agenten, oder ein Workflow?
 
 ###### tag-2/05-agenten-orchestrierung · Tag 2 · Kapitel 05
 
@@ -118,14 +144,14 @@ Der Aha-Moment der Übung: Niemand hat dem Agenten Cypher beigebracht — er hol
 |---|---|---|
 | **Fester Ablauf** (kein Agent) | Weg ist immer gleich | RAG-Pipeline T2/02 |
 | **Single Agent + Tools** | variable Wege, EIN Verantwortungsbereich | unsere Demo |
-| **Multi-Agent** (Agent als Tool / [Strands-Muster](https://strandsagents.com/docs/)) | klar trennbare Spezialgebiete | Recherche-Agent + Buchungs-Agent |
-| **Workflow-Engine** ([Step Functions](https://docs.aws.amazon.com/step-functions/)) | Determinismus/Audit Pflicht, LLM nur einzelne Schritte | Genehmigungsprozesse |
+| **Multi-Agent** (Agent als Tool) | klar trennbare Spezialgebiete | Recherche- + Buchungs-Agent |
+| **Workflow-Engine** ([Step Functions](https://docs.aws.amazon.com/step-functions/)) | Determinismus/Audit Pflicht | Genehmigungsprozesse |
 
 - **Agenda-Frage "Service-Mesh vs. Orchestrierungs-Framework":** Das Mesh (Netzwerk-Ebene: Routing, mTLS, Retries) bleibt zuständig — Agent-Orchestrierung ist **Anwendungs-Ebene**. Kein Entweder-oder, verschiedene Schichten
-- Betriebskosten steigen mit jeder Agenten-Runde (jeder Schritt = LLM-Call) — `metrics.accumulated_usage` im Blick behalten; Deployment/Observability: Tag 3 (AgentCore)
+- Betriebskosten steigen mit jeder Agenten-Runde (jeder Schritt = LLM-Call) — `metrics.accumulated_usage` im Blick behalten; Deployment: Tag 3 (AgentCore)
 
 <!--
-Tag 2 · Kapitel 05 · Folie 5/6 (Orchestrierung)
+Tag 2 · Kapitel 05 · Folie 6/7 (Orchestrierung)
 
 Die Mesh-Frage kommt aus der offiziellen Agenda — Antwort: unterschiedliche Schichten. Istio sieht HTTP-Calls zwischen Services; wer welchen Agenten-Schritt WARUM macht, ist Anwendungslogik. Beides existiert parallel.
 -->
@@ -147,7 +173,7 @@ Die Mesh-Frage kommt aus der offiziellen Agenda — Antwort: unterschiedliche Sc
 **Kosten:** Jede Agenten-Runde ist ein LLM-Call — die Übung bleibt im Centbereich, aber der Multiplikator ist der Punkt.
 
 <!--
-Tag 2 · Kapitel 05 · Folie 6/6 (Demo & Übung)
+Tag 2 · Kapitel 05 · Folie 7/7 (Demo & Übung)
 
 Tagesabschluss nach der Übung: Die komplette T2-Kette einmal durchzeigen — Output-Vertrag → Embeddings → GraphRAG → Service → Agent. Morgen wird genau diese Kette beobachtbar, evaluierbar und deploybar gemacht.
 -->

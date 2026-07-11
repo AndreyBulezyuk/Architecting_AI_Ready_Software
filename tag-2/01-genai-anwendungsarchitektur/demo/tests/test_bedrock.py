@@ -1,6 +1,6 @@
 """Live tests against Bedrock (cheap Haiku calls, temperature 0).
 
-Requires AWS credentials (profile `ai-training` or AWS_PROFILE) — skipped otherwise.
+Requires AWS credentials (profile `default` or AWS_PROFILE) — skipped otherwise.
 """
 
 import botocore.exceptions

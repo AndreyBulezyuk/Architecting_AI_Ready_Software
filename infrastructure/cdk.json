@@ -1,6 +1,6 @@
 {
   "app": "uv run python app.py",
-  "profile": "ai-training",
+  "profile": "default",
   "tags": {
     "Project": "ai-training",
     "Owner": "ai-training"

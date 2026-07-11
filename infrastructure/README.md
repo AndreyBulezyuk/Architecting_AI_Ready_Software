@@ -8,7 +8,7 @@ uv sync
 # Install aws cli
 curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
 sudo installer -pkg AWSCLIV2.pkg -target /
-aws login --profile ai-training
+aws login --profile default
 
 npx cdk synth            # offline: Python → CloudFormation
 npx cdk bootstrap        # 1x pro Account+Region (Teilnehmer: Übung 03)

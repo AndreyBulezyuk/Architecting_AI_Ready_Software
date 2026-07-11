@@ -28,6 +28,6 @@ settings = RagSettings()
 
 
 def bedrock_client() -> "BedrockRuntimeClient":
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     session = boto3.Session(profile_name=profile, region_name=settings.aws_region)
     return session.client("bedrock-runtime")  # pyright: ignore[reportUnknownMemberType]

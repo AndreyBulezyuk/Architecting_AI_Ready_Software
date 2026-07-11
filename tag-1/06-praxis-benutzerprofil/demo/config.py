@@ -25,7 +25,7 @@ class ProfileSettings(BaseSettings):
     visibility_timeout_seconds: int = 5
 
     # LLM summarization: cheap tier, id verified July 2026 (override via env)
-    bedrock_model_id: str = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    bedrock_model_id: str = "eu.amazon.nova-lite-v1:0"
     summarize_threshold: int = 5  # summarize once a user has >= N fresh signals
 
     neo4j_uri: str = "bolt://localhost:7687"
@@ -40,7 +40,7 @@ settings = ProfileSettings()
 
 
 def _session() -> boto3.Session:
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     return boto3.Session(profile_name=profile, region_name=settings.aws_region)
 
 

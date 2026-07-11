@@ -11,7 +11,7 @@ import os
 import time
 import uuid
 
-os.environ.setdefault("AWS_PROFILE", "ai-training")
+os.environ.setdefault("AWS_PROFILE", "default")
 os.environ["VISIBILITY_TIMEOUT_SECONDS"] = "1"  # fast retries for the DLQ test
 
 import infra

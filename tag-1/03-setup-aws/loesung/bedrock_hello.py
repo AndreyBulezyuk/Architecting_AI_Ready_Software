@@ -4,25 +4,18 @@ Usage:
     uv run python bedrock_hello.py "Was ist eine Dead-Letter-Queue?"
 
 No model access request, Marketplace subscription, CDK, or extra CLI step is needed:
-Anthropic Claude on Bedrock is pay-per-token — you are billed only for the tokens of
+Google Gemma on Bedrock is pay-per-token — you are billed only for the tokens of
 this one call (~250 tokens ≈ a fraction of a cent), nothing while idle.
 
-Where does the model id come from? It must be an *inference profile* (cross-region),
-not a raw foundation-model id — in eu-west-1 the raw ids (`anthropic.claude-...`) are
-rejected, and older ids like claude-3-haiku are flagged "Legacy" and blocked unless used
-recently. List the active Claude inference profiles for the account and pick one:
-    aws bedrock list-inference-profiles --profile ai-training --region eu-west-1 \
-        --query "inferenceProfileSummaries[?contains(inferenceProfileId, 'claude')].inferenceProfileId" \
+Where does the model id come from? It is a simple foundation-model id — no cross-region
+inference profile prefix is needed for Gemma 4. List the available models for the
+account and pick one:
+    aws bedrock list-inference-profiles --profile default --region eu-west-1 \
+        --query "inferenceProfileSummaries[?contains(inferenceProfileId, 'nova')].inferenceProfileId" \
         --output text
 
-Anatomy of the id `eu.anthropic.claude-haiku-4-5-20251001-v1:0`:
-    eu.            region scope of the cross-region inference profile (eu = EU regions)
-    anthropic      model provider
-    claude-haiku-4-5   model family + tier
-    20251001       model snapshot date (yyyymmdd)
-    v1:0           model version
-The `eu.` prefix is exactly what turns a foundation-model id into a usable inference
-profile id in eu-west-1. Override the default below via BEDROCK_MODEL_ID.
+The model id `eu.amazon.nova-lite-v1:0` is a standard on-demand Bedrock model id.
+Override the default below via BEDROCK_MODEL_ID.
 """
 
 # boto3.client() exposes partially-untyped members; the result is annotated instead
@@ -38,13 +31,11 @@ if TYPE_CHECKING:
     from mypy_boto3_bedrock_runtime.client import BedrockRuntimeClient
 
 
-
-
-DEFAULT_MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+DEFAULT_MODEL_ID = "eu.amazon.nova-lite-v1:0"
 
 
 def main() -> None:
-    # Cheapest active Claude in eu-west-1; override via env for other models.
+    # Cheap Gemma model; override via env for other models.
     model_id = os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID)
     # Show which model is in play — a stale exported BEDROCK_MODEL_ID (e.g. a legacy id
     # from an earlier attempt) silently overrides the default; print it so that's visible.
@@ -56,7 +47,7 @@ def main() -> None:
     # Bind to the training profile so credentials resolve without exporting AWS_PROFILE.
     # The profile uses the `aws login` credential provider (login_session in ~/.aws/config),
     # which requires the CRT extra — see botocore[crt] in pyproject.toml.
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     session = boto3.Session(profile_name=profile, region_name="eu-west-1")
     bedrock: "BedrockRuntimeClient" = session.client("bedrock-runtime")
     try:
@@ -67,12 +58,12 @@ def main() -> None:
         )
     except bedrock.exceptions.ResourceNotFoundException:
         sys.exit(
-            f"Model '{model_id}' is not usable (legacy or not an eu-west-1 inference "
-            f"profile). Unset BEDROCK_MODEL_ID to use the default '{DEFAULT_MODEL_ID}', "
+            f"Model '{model_id}' is not usable (legacy or not available in eu-west-1). "
+            f"Unset BEDROCK_MODEL_ID to use the default '{DEFAULT_MODEL_ID}', "
             "or pick an active one:\n"
-            "  aws bedrock list-inference-profiles --profile ai-training --region eu-west-1 "
-            "--query \"inferenceProfileSummaries[?contains(inferenceProfileId, 'claude')]"
-            ".inferenceProfileId\""
+            "  aws bedrock list-inference-profiles --profile default --region eu-west-1 "
+            "--query \"inferenceProfileSummaries[?contains(inferenceProfileId, 'nova')]"
+            '.inferenceProfileId"'
         )
 
     # response fields are optional in the API contract — access them defensively

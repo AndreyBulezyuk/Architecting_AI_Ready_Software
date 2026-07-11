@@ -20,7 +20,7 @@ class ServiceSettings(BaseSettings):
     aws_region: str = "eu-west-1"
     embedding_model_id: str = "cohere.embed-multilingual-v3"
     embedding_dimensions: int = 1024
-    chat_model_id: str = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    chat_model_id: str = "eu.amazon.nova-lite-v1:0"
 
     chunk_max_chars: int = 600
     chunk_overlap_chars: int = 100
@@ -33,7 +33,7 @@ settings = ServiceSettings()
 
 
 def _session() -> boto3.Session:
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     return boto3.Session(profile_name=profile, region_name=settings.aws_region)
 
 

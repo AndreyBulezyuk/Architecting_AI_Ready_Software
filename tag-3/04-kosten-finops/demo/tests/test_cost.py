@@ -13,13 +13,15 @@ def test_cost_of_uses_separate_cache_rates() -> None:
     tokens = TokenCounts(
         input_tokens=100, output_tokens=50, cache_write_tokens=1000, cache_read_tokens=2000
     )
-    model = "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+    model = "eu.amazon.nova-lite-v1:0"
     breakdown = cost_of(model, tokens)
-    price_in, price_out = 0.001, 0.005
+    price_in, price_out = 0.00006, 0.00024
     assert breakdown.input_cost == pytest.approx(100 / 1000 * price_in)
     assert breakdown.output_cost == pytest.approx(50 / 1000 * price_out)
     assert breakdown.cache_write_cost == pytest.approx(1000 / 1000 * price_in * 1.25)
-    assert breakdown.cache_read_cost == pytest.approx(2000 / 1000 * price_in * CACHE_READ_MULTIPLIER)
+    assert breakdown.cache_read_cost == pytest.approx(
+        2000 / 1000 * price_in * CACHE_READ_MULTIPLIER
+    )
 
 
 def test_unknown_model_costs_zero_not_crash() -> None:

@@ -14,7 +14,7 @@ Der [Converse-API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversa
 Aktive Claude-Profile für den Account auflisten und eine ID herauskopieren ([`list-inference-profiles`](https://docs.aws.amazon.com/cli/latest/reference/bedrock/list-inference-profiles.html)):
 
 ```bash
-aws bedrock list-inference-profiles --profile ai-training --region eu-west-1 \
+aws bedrock list-inference-profiles --profile default --region eu-west-1 \
     --query "inferenceProfileSummaries[?contains(inferenceProfileId, 'claude')].inferenceProfileId" \
     --output text
 ```

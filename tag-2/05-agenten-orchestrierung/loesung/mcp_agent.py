@@ -56,7 +56,7 @@ def neo4j_mcp_client() -> MCPClient:
 
 def ask(question: str) -> Any:
     """Build the agent inside the MCP session and answer one question."""
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     model = BedrockModel(
         boto_session=boto3.Session(profile_name=profile, region_name=settings.aws_region),
         model_id=settings.chat_model_id,

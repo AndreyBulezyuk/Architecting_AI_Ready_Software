@@ -26,7 +26,7 @@ from config import settings
 
 
 def bedrock_judge(model_id: str | None = None, max_tokens: int = 1024) -> InstructorLLM:
-    profile = os.environ.get("AWS_PROFILE", "ai-training")
+    profile = os.environ.get("AWS_PROFILE", "default")
     session = boto3.Session(profile_name=profile, region_name=settings.aws_region)
     boto_client = session.client("bedrock-runtime")  # pyright: ignore[reportUnknownMemberType]
 
