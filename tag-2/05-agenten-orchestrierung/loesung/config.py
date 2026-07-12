@@ -18,7 +18,7 @@ class RagSettings(BaseSettings):
     aws_region: str = "eu-west-1"
     embedding_model_id: str = "cohere.embed-multilingual-v3"
     embedding_dimensions: int = 1024
-    chat_model_id: str = "eu.amazon.nova-lite-v1:0"
+    chat_model_id: str = "eu.amazon.nova-pro-v1:0"
 
     chunk_max_chars: int = 600
     chunk_overlap_chars: int = 100

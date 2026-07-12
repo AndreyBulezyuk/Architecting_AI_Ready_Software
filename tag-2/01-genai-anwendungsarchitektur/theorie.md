@@ -15,7 +15,7 @@ Bausteine, Modellwahl, strukturierte Outputs
 **Tag 2 · Kapitel 01**
 
 <!--
-Tag 2 · Kapitel 01 · Folie 1/6 (Titel)
+Tag 2 · Kapitel 01 · Folie 1/7 (Titel)
 
 Rückblick Tag 1 in einem Satz: Events fließen, Daten liegen richtig, Bedrock ist erreichbar. Heute wird das LLM vom "hello world" zum Architektur-Baustein mit Vertrag.
 -->
@@ -44,7 +44,7 @@ flowchart LR
 **Kernidee:** Das Modell ist der am leichtesten austauschbare Baustein — Prompt, Context-Aufbau und Output-Vertrag sind euer eigentliches System.
 
 <!--
-Tag 2 · Kapitel 01 · Folie 2/6 (Bausteine)
+Tag 2 · Kapitel 01 · Folie 2/7 (Bausteine)
 
 An der Grafik entlang den Tag verkaufen: heute Modell+Prompt+Output-Vertrag (Kap. 01), Context kommt in 02/03 (RAG/GraphRAG), Tools in 05, Guardrails/Evals an Tag 3.
 -->
@@ -66,7 +66,7 @@ An der Grafik entlang den Tag verkaufen: heute Modell+Prompt+Output-Vertrag (Kap
 - Weitere Dimensionen: Kontextfenster, Latenz, Datenregion (EU-Profile bleiben in der EU)
 
 <!--
-Tag 2 · Kapitel 01 · Folie 3/6 (Modellwahl)
+Tag 2 · Kapitel 01 · Folie 3/7 (Modellwahl)
 
 Die Profile auf der Folie sind im Schulungskonto verifiziert (Juli 2026). Live zeigen: aws bedrock list-inference-profiles mit claude-Filter. Die Legacy-Falle aus der 03-Lösung erwähnen — genau so sehen echte Betriebsprobleme aus.
 -->
@@ -91,7 +91,7 @@ user_message = f"Kontext:\n{context}\n\nFrage: {question}"  # Daten, pro Request
 - Prompts gehören ins Repo, nicht in Köpfe — Änderungen sind Deployments (Tag 3: Prompt-Versionierung in Langfuse)
 
 <!--
-Tag 2 · Kapitel 01 · Folie 4/6 (Prompt- & Context-Design)
+Tag 2 · Kapitel 01 · Folie 4/7 (Prompt- & Context-Design)
 
 Der _V3-Suffix ist der Aufhänger: "Wer von euch hat Prompts in Produktion, die nur in einem Slack-Thread dokumentiert sind?" Prompt-Reviews wie Code-Reviews.
 -->
@@ -120,9 +120,41 @@ profile = TravelerProfile.model_validate(tool_use_input)   # Pydantic bleibt Pfl
 **Validieren trotzdem immer** — das Schema erzwingt Struktur, nicht Korrektheit. Ungültig ⇒ 1 Retry mit Fehlertext, dann Fehlerpfad (DLQ-Denke aus Tag 1).
 
 <!--
-Tag 2 · Kapitel 01 · Folie 5/6 (Strukturierte Outputs)
+Tag 2 · Kapitel 01 · Folie 5/7 (Strukturierte Outputs)
 
 Das ist DIE Folie des Kapitels: LLM-Output wird erst durch Schema + Validierung + Retry-Politik zum API-Vertrag. In der Demo live zeigen, wie das toolUse-Input-Objekt aus der Response gefischt wird.
+-->
+
+---
+
+# Warum erzwungener Tool-Call statt Prompt-Disziplin?
+
+###### tag-2/01-genai-anwendungsarchitektur · Tag 2 · Kapitel 01
+
+```mermaid
+flowchart LR
+    subgraph Manuell["Nur im Prompt"]
+        A["'Antworte nur mit JSON'"] --> B["Modell generiert Text"]
+        B --> C["Unsicheres Parsing\nCode-Fences, Fließtext, fehlende Felder"]
+    end
+    subgraph Tool["Erzwungener Tool-Call"]
+        D["toolConfig + toolChoice"] --> E["Modell MUSS das Schema bedienen"]
+        E --> F["Garantiert valides JSON\nmit allen Pflichtfeldern"]
+    end
+    C -.->|Retry + Patching| G[API-Vertrag]
+    F --> G
+    style A fill:#fdf2e9,stroke:#e67e22
+    style D fill:#e9f7ef,stroke:#27ae60
+```
+
+- **Das Modell führt euren Python-Code nicht aus.** Es erzeugt lediglich eine JSON-Antwort, die eurem Tool-Schema entspricht — euer eigener Code empfängt die JSON und validiert sie mit Pydantic.
+- **API-Level-Schema ist Vertrag, Prompt ist Bittgesang.** Ein `toolChoice`-Zwang bindet das Modell auf API-Ebene an euer Schema; eine Prompt-Anweisung wie "respond in JSON" ist Best-Effort — das Modell kann trotzdem fehlerhafte JSON oder Erklärtext zurückgeben.
+- **Kurzantwort auf "Warum nicht selbst mit LangChain/Prompt?"**: Tool-Calling liefert Schema-Enforcement auf API-Ebene (das Modell ist vertraglich verpflichtet, valides JSON in eurem Schema zu liefern), während Prompt-basierte Strukturierung ein Good-Faith-Versuch ist, der kaputte Responses erzeugen kann, die euer Parsing zerschießen.
+
+<!--
+Tag 2 · Kapitel 01 · Folie 5b/7 (Warum erzwungener Tool-Call)
+
+Häufige Frage aus dem Publikum: "Warum brauche ich das, wenn ich auch einfach im Prompt sagen kann 'gib mir JSON'?" — Die Kernantwort: Es geht um Zuverlässigkeit. Tool-Call-Enforcement ist ein API-Vertrag, kein Höflichkeitsrequest. Wichtig: Das Modell führt euren Code nicht aus, es liefert nur JSON, die ihr dann selbst validiert.
 -->
 
 ---
@@ -141,7 +173,7 @@ Das ist DIE Folie des Kapitels: LLM-Output wird erst durch Schema + Validierung 
 **Übung gleich:** Model-Router mit Kosten-Messung + eigener Output-Vertrag mit erzwungenem Tool-Call.
 
 <!--
-Tag 2 · Kapitel 01 · Folie 6/6 (Betrieb)
+Tag 2 · Kapitel 01 · Folie 7/7 (Betrieb)
 
 Brücke zu Tag 1 schlagen: Queue vor dem LLM = Kapitel 04, usage-Tracking = Vorarbeit für Langfuse an Tag 3. Danach direkt in die Demo.
 -->

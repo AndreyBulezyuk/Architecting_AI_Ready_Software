@@ -21,7 +21,7 @@ class RagSettings(BaseSettings):
     embedding_dimensions: int = 1024
 
     cheap_model_id: str = "eu.amazon.nova-lite-v1:0"
-    strong_model_id: str = "eu.amazon.nova-lite-v1:0"
+    strong_model_id: str = "eu.amazon.nova-pro-v1:0"
     chat_model_id: str = "eu.amazon.nova-lite-v1:0"
 
     chunk_max_chars: int = 600

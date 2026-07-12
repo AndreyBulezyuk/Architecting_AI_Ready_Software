@@ -10,7 +10,7 @@
 
 ## Teil 1 — Nachziehen (≈15 min)
 
-Demo ausführen (`caching.py`, `tiering.py`, `pytest`). Notiert die zwei Kernzahlen (Cache-Read-Anteil, Sonnet/Haiku-Faktor) — die braucht ihr als Vergleich für euren eigenen Report.
+Demo ausführen (`caching.py`, `tiering.py`, `pytest`). Notiert die zwei Kernzahlen (Cache-Read-Anteil, Pro/Lite-Faktor) — die braucht ihr als Vergleich für euren eigenen Report.
 
 ## Teil 2 — Der Kosten-Report (≈35 min)
 
@@ -18,7 +18,7 @@ Baut `cost_report(workload)` (Vorlage: `cost.py` aus der Demo für die USD-Rechn
 
 1. Ein `workload` ist eine Liste von `(task_type, text)` — mindestens `classify`, `summarize`, `draft`. Routet jeden Task über ein Dict auf einen Tier (billig für classify/summarize, stark für draft — Router aus T2/01).
 2. Pro Task: `converse` aufrufen, `usage` auslesen, mit `cost.py` in USD umrechnen. Der Report gibt pro Zeile Task, Modell und Kosten aus, plus eine Gesamtsumme.
-3. Lasst denselben Workload **einmal komplett auf dem billigen Tier** laufen (auch den Draft) und vergleicht die Gesamtsumme. Wie viel spart das Tiering — und würdet ihr den Draft-Task wirklich auf Haiku umstellen? (Schaut euch die **Antwortqualität** an, nicht nur den Preis — Rückgriff auf Ragas, Tag 3/02.)
+3. Lasst denselben Workload **einmal komplett auf dem billigen Tier** laufen (auch den Draft) und vergleicht die Gesamtsumme. Wie viel spart das Tiering — und würdet ihr den Draft-Task wirklich auf Nova Lite umstellen? (Schaut euch die **Antwortqualität** an, nicht nur den Preis — Rückgriff auf Ragas, Tag 3/02.)
 
 ## Teil 3 — Caching über den Workload (≈25 min)
 

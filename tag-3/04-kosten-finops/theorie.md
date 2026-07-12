@@ -78,8 +78,8 @@ Live gemessen, gleiche Aufgabe (Support-Nachricht klassifizieren):
 
 | Modell | Antwort | Kosten |
 |---|---|---|
-| **Haiku** | `zahlung` | **1×** |
-| **Sonnet** | `**zahlung**` (+ Erklärung) | **~10×** |
+| **Nova Lite** | `zahlung` | **1×** |
+| **Nova Pro** | `**zahlung**` (+ Erklärung) | **~13×** |
 
 - Für Klassifikation, Extraktion, Routing ist der **billige Tier meist gleichwertig** — das teure Modell "über-erklärt" hier sogar
 - Das ist der **Model-Router aus T2/01** als Kostenhebel: pro Aufgabentyp das billigste ausreichende Modell
@@ -142,7 +142,7 @@ Die Schleife zeigt, dass FinOps kein einmaliges Aufräumen ist. Wichtigster Pfei
 
 ###### tag-3/04-kosten-finops · Tag 3 · Kapitel 04
 
-**Demo:** Prompt Caching (gecachter Call ~10 % der Kosten) und Modell-Tiering (Sonnet ~10× teurer für dieselbe Klassifikation) — beides an echten Bedrock-Zahlen gemessen, plus ein `cost.py`, das aus `usage` echte USD rechnet.
+**Demo:** Prompt Caching (gecachter Call ~10 % der Kosten) und Modell-Tiering (Nova Pro ~13× teurer für dieselbe Klassifikation) — beides an echten Bedrock-Zahlen gemessen, plus ein `cost.py`, das aus `usage` echte USD rechnet.
 
 **Übung:** Baut einen **Kosten-Report** für einen Fragen-Mix: pro Frage Modell wählen (Router), `usage` messen, USD ausrechnen — und den Effekt von Caching und Tier-Wahl über den ganzen Mix beziffern. Zusatz: eine Budget-Action skizzieren, die bei Überschreitung wirklich stoppt.
 

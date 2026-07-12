@@ -17,6 +17,7 @@ from dataclasses import dataclass
 # USD per 1000 tokens (input, output) — EXAMPLE values, verify before every training
 PRICE_PER_1K: dict[str, tuple[float, float]] = {
     "eu.amazon.nova-lite-v1:0": (0.00006, 0.00024),
+    "eu.amazon.nova-pro-v1:0": (0.00020, 0.00080),
 }
 
 CACHE_WRITE_MULTIPLIER = 1.25

@@ -19,7 +19,7 @@ Der Draft-Task auf dem starken Tier dominiert die Gesamtsumme — genau der Punk
 
 Stolpersteine aus der Übung:
 
-- **Router als Kostenhebel** ([report.py](report.py)): Das `ROUTES`-Dict ist die eine Stelle, an der die Tier-Entscheidung fällt — dieselbe Struktur wie der T2/01-Router, hier aber unter dem Kosten-Blickwinkel. Den Draft auf Haiku umzurouten spart ~90 % *dieser Zeile*, aber nur, wenn die Antwortqualität reicht (Ragas prüfen, nicht raten).
+- **Router als Kostenhebel** ([report.py](report.py)): Das `ROUTES`-Dict ist die eine Stelle, an der die Tier-Entscheidung fällt — dieselbe Struktur wie der T2/01-Router, hier aber unter dem Kosten-Blickwinkel. Den Draft auf Nova Lite umzurouten spart ~90 % *dieser Zeile*, aber nur, wenn die Antwortqualität reicht (Ragas prüfen, nicht raten).
 - **Caching lohnt sich nicht immer** (Teil 3): Bei genau einem Task gibt es einen Cache-Write (1,25×) und **keinen** Read — reiner Verlust. Erst ab mehreren Anfragen mit demselben Prefix innerhalb der TTL dreht sich das. Die Cache-Hit-Ratio muss über ~30 % liegen.
 - **`inputTokens` ≠ Gesamtkosten**: Cache-Tokens werden getrennt gezählt; `cost.py` addiert alle vier Felder mit ihren eigenen Faktoren.
 - **Budget-Action als harter Deckel** (Zusatz): Ein Budget-*Alarm* schickt nur eine Mail — eine Budget-*Action* hängt bei Überschreitung eine IAM-Deny-Policy an und stoppt neue `InvokeModel`-Calls tatsächlich. Das ist der einzige Weg zu einem echten Ausgaben-Stopp (AWS deckelt sonst nicht hart — der ehrliche Punkt aus Tag 1/03).
