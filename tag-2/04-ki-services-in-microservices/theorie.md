@@ -191,12 +191,13 @@ Genau die Trainer-Frage: worker.py läuft manuell — wie in echt? Kernaussage: 
 - **LLM-Vokabular bleibt im Service:** Prompts, Modell-IDs, Token-Zahlen gehören nicht ins Domänenmodell der Konsumenten — der Vertrag übersetzt (`sources` statt "Chunks", `refused` statt Marker-String)
 - Prompt = **versioniertes Artefakt im Service-Repo** (`SYSTEM_PROMPT_V1`), Modell-ID = Config — beides deploybar ohne Konsumenten-Release
 - Wo der Service in der Landschaft steht: hinter dem API-Gateway wie jeder andere — Service-Mesh/AuthN/Rate-Limits gelten unverändert
+- **Zwei Schnittstellen, ein Rückgrat:** `rag.py` ist der Austauschpunkt — REST (`service.py`) für HTTP-Konsumenten, MCP (`mcp_server.py`) für Agenten und IDEs. Dasselbe Rückgrat, anderes Protokoll — kein additional Aufwand, weil die Logik gekapselt ist.
 
-**Demo:** Assistant-Service über der T2/02-Baseline — Vertrag, healthz, Throttling→503.
+**Demo:** Assistant-Service über der T2/02-Baseline — Vertrag, healthz, Throttling→503. Plus: derselbe Service als MCP-Server (`mcp_server.py`) — Brücke zu Kapitel 05.
 **Übung:** Ihr baut den Service um **euer** Retrieval und ergänzt den **Async-Pfad** (SQS + Worker + Status-Endpoint).
 
 <!--
 Tag 2 · Kapitel 04 · Folie 8/8 (Domänenmodell + Ausblick)
 
-Ausblick auf Kapitel 05: Der Agent wird diesen Service als Tool aufrufen — genau deshalb war der saubere Vertrag heute wichtig. Ein Agent kann mit 503+Retry-After umgehen, mit einem erfundenen Fallback-Text nicht.
+Ausblick auf Kapitel 05: Der Agent wird diesen Service als Tool aufrufen — genau deshalb war der saubere Vertrag heute wichtig. Ein Agent kann mit 503+Retry-After umgehen, mit einem erfundenen Fallback-Text nicht. Der MCP-Server zeigt: die Brücke zum Agenten ist kein extra Build, sondern ein anderes Protokoll über demselben rag.py.
 -->

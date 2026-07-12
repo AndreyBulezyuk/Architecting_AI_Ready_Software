@@ -17,4 +17,4 @@ Danach live in Langfuse zeigen: <http://localhost:3000> (Login `trainer@example.
 - [rag.py](rag.py): **ein** Root-Span (`rag.answer`) pro Anfrage, **ein** Child-Span (`vector_search`) für die Retrieval-Stufe — die Trace-Baum-Struktur bildet exakt den Ablauf aus T2/02 ab.
 - Die Attribut-Namen sind [OTel-GenAI-Konventionen](https://opentelemetry.io/docs/specs/semconv/gen-ai/) (`gen_ai.request.model`, `gen_ai.usage.*`) — Langfuse übersetzt sie **automatisch** in Modell, Tokens und sogar **Kosten** (Theorie-Folie 4, live im UI zeigen: die Kostenspalte ist gefüllt, ohne dass wir eine Preistabelle gepflegt haben).
 - Der `print`-Zeile aus T2/04 ist komplett verschwunden — die Trace **ist** jetzt das Log.
-- [langfuse_api.py](langfuse_api.py): Die Tests lesen die eigene Trace über die Langfuse-API zurück — das beweist die Instrumentierung, statt sie zu behaupten.
+- [langfuse_api.py](langfuse_api.py): Die Tests lesen die eigene Trace über die Langfuse-API zurück.
