@@ -3,6 +3,9 @@
 The difference to the T2/02 baseline is ONE extra step: from the vector hits we
 walk the graph (doc -> shared entities -> related docs) and pull extra context
 a pure vector search would never surface for this question.
+
+Traced via OTel → Langfuse: each step (vector_hits, graph_expansion, LLM call)
+appears as a child span in the trace tree — visible in the Langfuse UI.
 """
 
 from dataclasses import dataclass
@@ -10,6 +13,7 @@ from dataclasses import dataclass
 from config import bedrock_client, settings
 from embeddings import embed_query
 from kg import INDEX, driver
+from tracing import tracer
 
 SYSTEM_PROMPT_V1 = """Du bist Reise-Assistent von TravelMate.
 Antworte ausschließlich auf Basis des nummerierten Kontexts, auf Deutsch, knapp.
@@ -36,55 +40,85 @@ class GraphRagAnswer:
 
 
 def vector_hits(question: str, k: int = 3) -> list[ContextChunk]:
-    with driver() as neo4j:
-        records = neo4j.execute_query(
-            f"CALL db.index.vector.queryNodes('{INDEX}', $k, $query) "
-            "YIELD node RETURN node.doc_id AS doc_id, node.seq AS seq, node.text AS text",
-            k=k,
-            query=embed_query(question),
-        ).records
-    return [ContextChunk(r["doc_id"], r["seq"], r["text"], "vector") for r in records]
+    with tracer.start_as_current_span("vector_search") as span:
+        span.set_attribute("langfuse.observation.type", "retriever")
+        span.set_attribute("langfuse.observation.input", question)
+        with driver() as neo4j:
+            records = neo4j.execute_query(
+                f"CALL db.index.vector.queryNodes('{INDEX}', $k, $query) "
+                "YIELD node RETURN node.doc_id AS doc_id, node.seq AS seq, node.text AS text",
+                k=k,
+                query=embed_query(question),
+            ).records
+        hits = [ContextChunk(r["doc_id"], r["seq"], r["text"], "vector") for r in records]
+        span.set_attribute(
+            "langfuse.observation.output",
+            ", ".join(f"{h.doc_id}#{h.seq}" for h in hits),
+        )
+        return hits
 
 
 def graph_expansion(hit_doc_ids: set[str], limit: int = 2) -> list[ContextChunk]:
     """Docs that share an entity with a hit doc — plus the entity as provenance."""
-    with driver() as neo4j:
-        records = neo4j.execute_query(
-            """
-            MATCH (hit:T3Doc)-[:MENTIONS]->(e:T3Entity)<-[:MENTIONS]-(related:T3Doc)
-            WHERE hit.doc_id IN $doc_ids AND NOT related.doc_id IN $doc_ids
-            WITH related, collect(DISTINCT e.name) AS shared, count(DISTINCT e) AS overlap
-            ORDER BY overlap DESC LIMIT $limit
-            MATCH (related)<-[:PART_OF]-(c:T3Chunk {seq: 0})
-            RETURN related.doc_id AS doc_id, c.text AS text, shared
-            """,
-            doc_ids=list(hit_doc_ids),
-            limit=limit,
-        ).records
-    return [
-        ContextChunk(r["doc_id"], 0, r["text"], f"graph:{','.join(r['shared'])}")
-        for r in records
-    ]
+    with tracer.start_as_current_span("graph_expansion") as span:
+        span.set_attribute("langfuse.observation.type", "retriever")
+        span.set_attribute("langfuse.observation.input", str(hit_doc_ids))
+        with driver() as neo4j:
+            records = neo4j.execute_query(
+                """
+                MATCH (hit:T3Doc)-[:MENTIONS]->(e:T3Entity)<-[:MENTIONS]-(related:T3Doc)
+                WHERE hit.doc_id IN $doc_ids AND NOT related.doc_id IN $doc_ids
+                WITH related, collect(DISTINCT e.name) AS shared, count(DISTINCT e) AS overlap
+                ORDER BY overlap DESC LIMIT $limit
+                MATCH (related)<-[:PART_OF]-(c:T3Chunk {seq: 0})
+                RETURN related.doc_id AS doc_id, c.text AS text, shared
+                """,
+                doc_ids=list(hit_doc_ids),
+                limit=limit,
+            ).records
+        hits = [
+            ContextChunk(r["doc_id"], 0, r["text"], f"graph:{','.join(r['shared'])}")
+            for r in records
+        ]
+        span.set_attribute(
+            "langfuse.observation.output",
+            ", ".join(f"{h.doc_id} via {h.via}" for h in hits),
+        )
+        return hits
 
 
-def answer(question: str, k: int = 3) -> GraphRagAnswer:
-    context = vector_hits(question, k)
-    context += graph_expansion({chunk.doc_id for chunk in context})
+def answer(question: str, k: int = 3, *, tags: list[str] | None = None) -> GraphRagAnswer:
+    with tracer.start_as_current_span("graphrag.answer") as span:
+        span.set_attribute("langfuse.trace.tags", tags or ["tag-2/03", "graphrag"])
+        span.set_attribute("gen_ai.prompt", question)
 
-    numbered = "\n\n".join(f"[{i + 1}] {chunk.text}" for i, chunk in enumerate(context))
-    response = bedrock_client().converse(
-        modelId=settings.chat_model_id,
-        system=[{"text": SYSTEM_PROMPT_V1}],
-        messages=[{
-            "role": "user",
-            "content": [{"text": f"Kontext:\n{numbered}\n\nFrage: {question}"}],
-        }],
-        inferenceConfig={"maxTokens": 400, "temperature": 0},
-    )
-    message = response["output"].get("message")
-    assert message is not None, "model returned no message"
-    text = (message.get("content") or [{}])[0].get("text", "")
-    return GraphRagAnswer(text=text, context=context)
+        context = vector_hits(question, k)
+        context += graph_expansion({chunk.doc_id for chunk in context})
+
+        numbered = "\n\n".join(f"[{i + 1}] {chunk.text}" for i, chunk in enumerate(context))
+        response = bedrock_client().converse(
+            modelId=settings.chat_model_id,
+            system=[{"text": SYSTEM_PROMPT_V1}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"text": f"Kontext:\n{numbered}\n\nFrage: {question}"}],
+                }
+            ],
+            inferenceConfig={"maxTokens": 400, "temperature": 0},
+        )
+        message = response["output"].get("message")
+        assert message is not None, "model returned no message"
+        usage = response["usage"]
+        text = (message.get("content") or [{}])[0].get("text", "")
+
+        span.set_attribute("gen_ai.system", "aws.bedrock")
+        span.set_attribute("gen_ai.request.model", settings.chat_model_id)
+        span.set_attribute("gen_ai.usage.input_tokens", usage["inputTokens"])
+        span.set_attribute("gen_ai.usage.output_tokens", usage["outputTokens"])
+        span.set_attribute("gen_ai.completion", text)
+
+        return GraphRagAnswer(text=text, context=context)
 
 
 if __name__ == "__main__":
