@@ -55,11 +55,11 @@ An der Grafik entlang den Tag verkaufen: heute Modell+Prompt+Output-Vertrag (Kap
 
 ###### tag-2/01-genai-anwendungsarchitektur · Tag 2 · Kapitel 01
 
-| Tier (Claude auf Bedrock) | Charakter | Typische Aufgaben |
+| Tier (Amazon Nova auf Bedrock) | Charakter | Typische Aufgaben |
 |---|---|---|
-| **Haiku** (`eu.anthropic.claude-haiku-4-5-…`) | schnell, billig | Klassifikation, Extraktion, Zusammenfassung, hohe Volumina |
-| **Sonnet** (`eu.anthropic.claude-sonnet-4-6`, Sonnet 5) | ausgewogen | Q&A mit Kontext, Code, Agenten-Schritte |
-| **Opus** (`eu.anthropic.claude-opus-4-8`) | maximale Qualität | komplexes Reasoning, heikle Texte — sparsam einsetzen |
+| **Nova Micro** (`eu.amazon.nova-micro-v1:0`) | schnell, billigste, nur Text | Klassifikation, Extraktion, hohe Volumina |
+| **Nova Lite** (`eu.amazon.nova-lite-v1:0`) | billig, multimodal — Standard in dieser Schulung | Q&A mit Kontext, Zusammenfassung |
+| **Nova Pro** (`eu.amazon.nova-pro-v1:0`) | stark, multimodal | komplexes Reasoning, Agenten-Schritte — sparsam einsetzen |
 
 - Preisunterschied zwischen Tiers: **Größenordnungen** ([Bedrock Pricing](https://aws.amazon.com/bedrock/pricing/)) — Architektur-Konsequenz: **Model-Router** pro Aufgabentyp (Übung!)
 - IDs sind Config (Tag-1-Merksatz); in `eu-west-1` immer `eu.`-Inference-Profile; ältere Modelle werden als **Legacy** blockiert — Verfügbarkeit ändert sich unterm Jahr
@@ -68,7 +68,7 @@ An der Grafik entlang den Tag verkaufen: heute Modell+Prompt+Output-Vertrag (Kap
 <!--
 Tag 2 · Kapitel 01 · Folie 3/7 (Modellwahl)
 
-Die Profile auf der Folie sind im Schulungskonto verifiziert (Juli 2026). Live zeigen: aws bedrock list-inference-profiles mit claude-Filter. Die Legacy-Falle aus der 03-Lösung erwähnen — genau so sehen echte Betriebsprobleme aus.
+Die Profile auf der Folie sind im Schulungskonto verifiziert (Juli 2026). Live zeigen: aws bedrock list-inference-profiles mit nova-Filter. Die Legacy-Falle aus der 03-Lösung erwähnen — genau so sehen echte Betriebsprobleme aus.
 -->
 
 ---
@@ -147,9 +147,8 @@ flowchart LR
     style D fill:#e9f7ef,stroke:#27ae60
 ```
 
-- **Das Modell führt euren Python-Code nicht aus.** Es erzeugt lediglich eine JSON-Antwort, die eurem Tool-Schema entspricht — euer eigener Code empfängt die JSON und validiert sie mit Pydantic.
-- **API-Level-Schema ist Vertrag, Prompt ist Bittgesang.** Ein `toolChoice`-Zwang bindet das Modell auf API-Ebene an euer Schema; eine Prompt-Anweisung wie "respond in JSON" ist Best-Effort — das Modell kann trotzdem fehlerhafte JSON oder Erklärtext zurückgeben.
-- **Kurzantwort auf "Warum nicht selbst mit LangChain/Prompt?"**: Tool-Calling liefert Schema-Enforcement auf API-Ebene (das Modell ist vertraglich verpflichtet, valides JSON in eurem Schema zu liefern), während Prompt-basierte Strukturierung ein Good-Faith-Versuch ist, der kaputte Responses erzeugen kann, die euer Parsing zerschießen.
+- **Das Modell führt euren Code nicht aus.** Es liefert nur eine JSON-Antwort, die eurem Tool-Schema entspricht — euer Code empfängt sie und validiert mit Pydantic.
+- **`toolChoice` bindet das Modell auf API-Ebene an das Schema.** Das ist verlässlicher als eine Prompt-Anweisung wie "respond in JSON", die das Modell ignorieren oder mit Erklärtext umrahmen kann (auch als Ersatz für LangChains structured-output-Helfer).
 
 <!--
 Tag 2 · Kapitel 01 · Folie 5b/7 (Warum erzwungener Tool-Call)

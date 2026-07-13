@@ -84,15 +84,17 @@ flowchart LR
 | Span-Attribut | Wirkung in Langfuse |
 |---|---|
 | `gen_ai.request.model` gesetzt | Observation wird automatisch als **GENERATION** klassifiziert |
-| `gen_ai.usage.input_tokens`/`output_tokens` | füllt `usageDetails` — **und berechnet Kosten**, wenn die Modell-ID bekannt ist (unser Bedrock-Haiku: ja!) |
+| `gen_ai.usage.input_tokens`/`output_tokens` | füllt `usageDetails` (Tokens) — **Kosten** nur, wenn für die Modell-ID ein Preis hinterlegt ist |
 | `gen_ai.prompt` / `gen_ai.completion` | Trace-Input/-Output |
+
+**Kosten-Falle bei Cross-Region-Profilen:** Langfuses eingebaute Preistabelle matcht die `eu.`-Präfix-IDs (`eu.amazon.nova-lite-v1:0`) nicht automatisch ([Issue #6655](https://github.com/langfuse/langfuse/issues/6655)) — Preis einmalig als eigene Model-Definition hinterlegen (Project Settings → Models), dann füllt Langfuse die Kostenspalte selbst.
 
 **Endpoint:** `POST {host}/api/public/otel/v1/traces`, Basic-Auth mit `public_key:secret_key` — kein SDK-Zwang, jedes OTel-SDK reicht.
 
 <!--
 Tag 3 · Kapitel 01 · Folie 4/7 (Langfuse als OTLP-Backend)
 
-Der Kosten-Moment ist der Aha-Effekt der Demo: live zeigen, dass die Kostenspalte für unser Haiku-Modell gefüllt ist, OHNE dass wir irgendwo einen Preis eingetragen haben. Vorgriff auf Tag 3/04 (FinOps) ankündigen.
+Kosten-Moment der Demo: sobald der Preis für unser Nova-Modell als eigene Model-Definition hinterlegt ist, füllt Langfuse die Kostenspalte selbst — ohne dass wir pro Call rechnen. Ehrlich benennen, dass die `eu.`-Präfix-IDs diese eigene Preis-Definition brauchen (Issue #6655), sonst bleibt die Spalte leer. Vorgriff auf Tag 3/04 (FinOps) ankündigen.
 -->
 
 ---

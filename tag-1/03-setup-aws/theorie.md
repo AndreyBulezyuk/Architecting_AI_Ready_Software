@@ -108,11 +108,11 @@ Live zeigen, wie klein base_stack.py ist vs. wie viel CloudFormation synth erzeu
 
 **1. Model Access** muss pro Account einmal aktiviert werden (Bedrock-Konsole → *Model access*). Das ist unsere **einzige** Console-Ausnahme — dafür gibt es kein stabiles CLI-API.
 
-**2. Inference Profiles:** Viele Claude-Modelle sind in `eu-west-1` **nicht als On-Demand-Modell** aufrufbar, sondern über **EU-Cross-Region-Inference-Profile** (`eu.anthropic.…`) — der Aufruf startet in Irland, kann aber in anderen EU-Regionen bedient werden.
+**2. Inference Profiles:** Viele Modelle sind in `eu-west-1` **nicht als On-Demand-Modell** aufrufbar, sondern über **EU-Cross-Region-Inference-Profile** (`eu.amazon.…`) — der Aufruf startet in Irland, kann aber in anderen EU-Regionen bedient werden.
 
 ```bash
 aws bedrock list-foundation-models --region eu-west-1 \
-  --query 'modelSummaries[?providerName==`Anthropic`].modelId'
+  --query 'modelSummaries[?providerName==`Amazon`].modelId'
 aws bedrock list-inference-profiles --region eu-west-1 \
   --query 'inferenceProfileSummaries[].inferenceProfileId'
 ```

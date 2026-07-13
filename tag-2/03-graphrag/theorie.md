@@ -85,7 +85,7 @@ sequenceDiagram
     participant R as GraphRAG-Service
     participant V as Vector Index
     participant G as Graph (Cypher)
-    participant L as Claude
+    participant L as Nova
     R->>V: Top-k Chunks zur Frage
     V-->>R: Treffer (doc_ids)
     R->>G: Docs, die Entities mit den Treffern teilen

@@ -87,7 +87,7 @@ Das ist die konkrete "kleine Architektur": zwei sync-Services (Assistant aus die
 POST /v1/ask  {"question": "Wo kann man mit Kindern baden?"}
 → 200 {"schema_version": "1", "request_id": "…", "answer": "… [1]",
        "refused": false, "sources": [{"doc_id": "algarve", "seq": 0}],
-       "model_id": "eu.anthropic.claude-haiku-…",
+       "model_id": "eu.amazon.nova-lite-v1:0",
        "input_tokens": 812, "output_tokens": 74, "latency_ms": 1430}
 ```
 
@@ -191,7 +191,7 @@ Genau die Trainer-Frage: worker.py läuft manuell — wie in echt? Kernaussage: 
 - **LLM-Vokabular bleibt im Service:** Prompts, Modell-IDs, Token-Zahlen gehören nicht ins Domänenmodell der Konsumenten — der Vertrag übersetzt (`sources` statt "Chunks", `refused` statt Marker-String)
 - Prompt = **versioniertes Artefakt im Service-Repo** (`SYSTEM_PROMPT_V1`), Modell-ID = Config — beides deploybar ohne Konsumenten-Release
 - Wo der Service in der Landschaft steht: hinter dem API-Gateway wie jeder andere — Service-Mesh/AuthN/Rate-Limits gelten unverändert
-- **Zwei Schnittstellen, ein Rückgrat:** `rag.py` ist der Austauschpunkt — REST (`service.py`) für HTTP-Konsumenten, MCP (`mcp_server.py`) für Agenten und IDEs. Dasselbe Rückgrat, anderes Protokoll — kein additional Aufwand, weil die Logik gekapselt ist.
+- **Zwei Schnittstellen, ein Rückgrat:** `rag.py` ist der Austauschpunkt — REST (`service.py`) für HTTP-Konsumenten, MCP (`mcp_server.py`) für Agenten und IDEs. Anderes Protokoll über derselben Logik, kein zusätzlicher Aufwand.
 
 **Demo:** Assistant-Service über der T2/02-Baseline — Vertrag, healthz, Throttling→503. Plus: derselbe Service als MCP-Server (`mcp_server.py`) — Brücke zu Kapitel 05.
 **Übung:** Ihr baut den Service um **euer** Retrieval und ergänzt den **Async-Pfad** (SQS + Worker + Status-Endpoint).

@@ -88,9 +88,9 @@ CALL db.index.vector.queryNodes('document_embeddings', 5, $queryVector)
 YIELD node, score RETURN node.id, node.title ORDER BY score DESC;
 ```
 
-- **Top-k-Suche** (`queryNodes(index, k, vector)`): "Gib mir die `k` Knoten, deren Embeddings dem Query-Vektor am nächsten sind." Der Index navigiert dafür eine vorab aufgebaute Nachbarschaftsstruktur (ANN), statt alle Vektoren durchzurechnen — deshalb bleibt die Suche auch bei Millionen Knoten schnell.
+- **Top-k-Suche** (`queryNodes(index, k, vector)`): die `k` Knoten, deren Embeddings dem Query-Vektor am nächsten sind. Der Index nutzt eine vorab gebaute Nachbarschaftsstruktur (ANN) statt alle Vektoren durchzurechnen — schnell auch bei Millionen Knoten.
 - **`score` ist Ähnlichkeit** (größer = besser) — kein Distanzoperator wie bei pgvector/SQL
-- Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; Zustand prüfbar per `SHOW VECTOR INDEXES` — dort pflegt Neo4j automatisch `state` (Lebenszyklus des Index: `POPULATING` = baut noch auf, `ONLINE` = abfragbar, `FAILED`) und `populationPercent` (wie viel Prozent der Knoten schon eingearbeitet sind); nichts davon rechnet ihr selbst
+- Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; `SHOW VECTOR INDEXES` zeigt `state` (`POPULATING` → `ONLINE`/`FAILED`) und `populationPercent` — Neo4j pflegt beides selbst
 - Dimension und Similarity-Funktion (`cosine`/`euclidean`) sind **fix pro Index** — Modellwechsel mit anderer Dimension heißt: neuer Index (passt zur Lifecycle-Folie)
 - ANN-Suche ist **approximativ** — Recall < 100 % ist normal; max. 4096 Dimensionen ([Doku](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/))
 
@@ -102,7 +102,7 @@ Trick der Demo hervorheben: stale markieren = embedding-Property entfernen → d
 
 ---
 
-# Polyglot ja — aber mit einer Wahrheit
+# Viele Stores, eine Source of Truth
 
 ###### tag-1/05-daten-zentrierte-persistenz · Tag 1 · Kapitel 05
 
@@ -114,12 +114,12 @@ flowchart LR
     style SRC fill:#e8f4fd,stroke:#2b7bb9
 ```
 
-- **Eine** Quelle der Wahrheit; Vektor-, Graph- und Profil-Stores sind **abgeleitete Sichten** — neu aufbaubar, wegwerfbar
+- **Single Source of Truth**; Vektor-, Graph- und Profil-Stores sind **abgeleitete Sichten** — neu aufbaubar, wegwerfbar
 - Synchronisation über **Events** (Kapitel 04), nicht über Doppel-Schreiben im Request-Pfad ⇒ Konsistenz ist **eventual**: Sichten hinken Sekunden hinterher, das System muss das aushalten
 - Jede Sicht beantwortet genau die Frage, für die sie gebaut ist — das ist der Kern von "daten-zentriert für KI"
 
 <!--
-Tag 1 · Kapitel 05 · Folie 5/6 (Polyglot mit einem Single-Source-of-Truth DB)
+Tag 1 · Kapitel 05 · Folie 5/6 (Viele Stores, eine Source of Truth)
 
 Diskussionsfrage: "Was passiert, wenn jemand die Vektor-Sicht direkt beschreibt, ohne die Quelle zu ändern?" — Drift, nicht reproduzierbar. Deshalb: Sichten dürfen nur von der Pipeline beschrieben werden.
 -->

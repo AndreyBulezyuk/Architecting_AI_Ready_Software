@@ -19,7 +19,7 @@ Bauchgefühl durch Messung ersetzen:
 
 ## Teil 3 — RAG-Antwort mit Zitaten und ehrlichem Scheitern (≈35 min)
 
-1. `answer(question, k=3)`: Top-k-Chunks holen, als **nummerierten Kontext** (`[1]`, `[2]` …) in einen User-Prompt bauen, mit Haiku beantworten (Muster aus T2/01: `temperature=0`, System-Prompt mit Regeln).
+1. `answer(question, k=3)`: Top-k-Chunks holen, als **nummerierten Kontext** (`[1]`, `[2]` …) in einen User-Prompt bauen, mit Nova Lite beantworten (Muster aus T2/01: `temperature=0`, System-Prompt mit Regeln).
 2. Die Regeln im System-Prompt: nur aus dem Kontext antworten, Quellen als `[n]` zitieren — und wenn der Kontext die Frage **nicht** beantwortet, exakt mit `KEINE_ANTWORT_IM_KONTEXT` antworten.
 3. Gebt neben dem Text auch die verwendeten Chunk-Referenzen zurück (`doc_id`, `seq`) — die API-Konsumenten von morgen brauchen sie.
 4. Testet beides: eine beantwortbare Frage (Zitat vorhanden?) und *"Welche Programmiersprache ist die beste?"* (kommt der Marker?).

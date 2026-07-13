@@ -14,7 +14,7 @@
    aws sts get-caller-identity   # eure Account-ID?
    ```
 
-3. Bedrock **Model Access**: Console → Bedrock → *Model access* → Anthropic-Claude-Modelle aktivieren (einzige Console-Aufgabe der Schulung).
+3. Bedrock **Model Access**: Console → Bedrock → *Model access* → Amazon-Nova-Modelle aktivieren (einzige Console-Aufgabe der Schulung).
 
 ## Teil 2 — Eigener Stack (≈40 min)
 
@@ -28,14 +28,14 @@ Baut auf der Demo auf, aber erweitert sie. Erstellt in eurem Projekt einen Stack
 
 ## Teil 3 — Erster Bedrock-Call (≈20 min)
 
-1. Findet euer nutzbares Claude-Inference-Profile (der Filter ist wichtig — die ungefilterte Liste enthält auch Profile anderer Anbieter und `global.`-Varianten):
+1. Findet euer nutzbares Nova-Inference-Profile (der Filter ist wichtig — die ungefilterte Liste enthält auch Profile anderer Anbieter und `global.`-Varianten):
 
    ```bash
    aws bedrock list-inference-profiles --region eu-west-1 \
-     --query 'inferenceProfileSummaries[?contains(inferenceProfileId, `eu.anthropic.claude`)].inferenceProfileId'
+     --query 'inferenceProfileSummaries[?contains(inferenceProfileId, `eu.amazon.nova`)].inferenceProfileId'
    ```
 
-   Nehmt ein Haiku-Profil (billigstes Modell) für die ersten Gehversuche.
+   Nehmt ein Nova-Micro- oder Nova-Lite-Profil (billiges Modell) für die ersten Gehversuche.
 
 2. Schreibt ein kleines Skript `bedrock_hello.py` (boto3, [`converse`-API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)), das eine Frage stellt und **Antwort + Token-Verbrauch** (`usage` in der Response) ausgibt.
 3. Die Modell-ID kommt per Env-Variable ins Skript — nicht hartcodiert (warum? → Theorie-Folie "Merksatz").

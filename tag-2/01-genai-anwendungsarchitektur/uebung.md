@@ -9,7 +9,7 @@ Demo ausführen (`chat.py`, `structured.py`, `pytest`). Schaut euch in `structur
 
 ## Teil 2 — Model-Router (≈30 min)
 
-1. Findet per CLI eure aktiven Claude-Profile (Filter aus Übung 03!) und wählt ein **billiges** (Haiku) und ein **starkes** (Sonnet/Opus) Profil.
+1. Findet per CLI eure aktiven Nova-Profile (Filter aus Übung 03!) und wählt ein **billiges** (Nova Micro/Lite) und ein **starkes** (Nova Pro) Profil.
 2. Baut `router.py`: ein `TaskType` (`Literal["classify", "summarize", "draft"]`) wird über ein Konfigurations-Dict auf eine Modell-ID gemappt; `run_task(task_type, text)` führt den Call aus und gibt Antwort **plus Messwerte** zurück: Modell-ID, Input-/Output-Tokens, Latenz in ms.
 3. Lasst dieselbe Zusammenfassungs-Aufgabe einmal über das billige und einmal über das starke Modell laufen und vergleicht Tokens, Latenz und Qualität. Überrascht euch das Ergebnis?
 

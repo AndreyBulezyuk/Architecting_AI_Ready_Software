@@ -33,7 +33,7 @@ flowchart LR
     C --> E[Embedding\nBedrock Cohere/Titan]
     E --> V[(Neo4j\nVector Index)]
     Q[Frage] --> QE[Query-Embedding] --> V
-    V --> K[Top-k Chunks] --> A[Antwort-Synthese\nClaude + Kontext]
+    V --> K[Top-k Chunks] --> A[Antwort-Synthese\nNova + Kontext]
     style E fill:#e9f7ef,stroke:#27ae60
     style A fill:#e9f7ef,stroke:#27ae60
 ```
@@ -103,7 +103,7 @@ sequenceDiagram
     participant U as Client
     participant R as RAG-Service
     participant V as Neo4j Vector Index
-    participant L as Claude (Haiku)
+    participant L as Nova (Lite)
     U->>R: Frage
     R->>R: embed(Frage, search_query)
     R->>V: Top-k Chunks (Cosine)

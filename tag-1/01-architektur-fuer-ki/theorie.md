@@ -73,7 +73,7 @@ Die Loops laufen **unabhängig getaktet** — die Architektur muss Modellwechsel
 <!--
 Tag 1 · Kapitel 01 · Folie 3/10 (Drei Disziplinen, drei Loops)
 
-Freestyle-Punkt: An der gestrichelten Kante "API/Endpoint" aufhängen, dass der Architekt den Vertrag definiert (Latenz, Kosten, Schema), nicht das Modell-Innere. Beispiel: Modell-Upgrade Claude 3.5 → 4 sollte ein Config-Change sein, kein Refactoring.
+Freestyle-Punkt: An der gestrichelten Kante "API/Endpoint" aufhängen, dass der Architekt den Vertrag definiert (Latenz, Kosten, Schema), nicht das Modell-Innere. Beispiel: ein Modell-Upgrade (neue Version, anderer Anbieter) sollte ein Config-Change sein, kein Refactoring.
 -->
 
 ---
@@ -191,7 +191,7 @@ flowchart LR
     API --> R[GraphRAG-Service\nTag 2]
     R --> KG[(Neo4j\nKnowledge Graph)]
     R --> A[Agent · Strands\nTag 2]
-    A --> BR[Bedrock\nClaude]
+    A --> BR[Bedrock\nNova]
     A --> OBS[Langfuse / OTel\nTag 3]
     style P fill:#e8f4fd,stroke:#2b7bb9
     style R fill:#e9f7ef,stroke:#27ae60

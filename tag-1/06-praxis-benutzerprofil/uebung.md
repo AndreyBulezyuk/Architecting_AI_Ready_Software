@@ -31,7 +31,7 @@
 
 1. Pydantic-Schema `ProfileSummary` (`interests: list[str]` max. 5, `persona_summary: str` max. 2 Sätze, `travel_style: Literal["budget","comfort","luxury","unknown"]`).
 2. Funktion `summarize_profile(user_id)`: liest alle Signale, baut einen Prompt ("Antworte NUR mit JSON nach diesem Schema …"), ruft Bedrock `converse` auf (Muster aus Übung 03, Modell-ID aus der Env) und validiert mit `model_validate_json`.
-3. Ungültiges JSON ⇒ **ein** Retry mit Fehlerhinweis im Prompt, danach aufgeben und loggen. **Bekannte Falle:** Claude wickelt das JSON gern in einen ```json-Code-Fence — den müsst ihr vor `model_validate_json` entfernen; bei `temperature=0` kommt im Retry deterministisch dieselbe Antwort, der Retry allein rettet euch also nicht.
+3. Ungültiges JSON ⇒ **ein** Retry mit Fehlerhinweis im Prompt, danach aufgeben und loggen. **Bekannte Falle:** Das LLM wickelt das JSON gern in einen ```json-Code-Fence — den müsst ihr vor `model_validate_json` entfernen; bei `temperature=0` kommt im Retry deterministisch dieselbe Antwort, der Retry allein rettet euch also nicht.
 4. Der Worker aus Etappe A stößt die Summarization an, sobald ein Nutzer ≥ 5 Signale ohne `summarized`-Flag hat; Ergebnis landet in einer DynamoDB-Tabelle `user_profiles` (`user_id`, `interests`, `persona_summary`, `travel_style`, `updated_at`), die Signale werden als `summarized=true` markiert. Die API liefert das Profil aus.
 
 **Fertig, wenn:** `simulate_user.py` + Worker-Lauf ⇒ `GET /user_profiles/{id}` zeigt echte, vom LLM extrahierte Interessen.

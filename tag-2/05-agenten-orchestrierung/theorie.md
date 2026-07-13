@@ -82,7 +82,7 @@ Live-Vergleich zu LangGraph ziehen: Strands = Modell entscheidet; LangGraph = ex
 
 ---
 
-# MCP in einer Minute (nicht Kursthema, aber gut zu kennen)
+# MCP in einer Minute
 
 ###### tag-2/05-agenten-orchestrierung · Tag 2 · Kapitel 05
 

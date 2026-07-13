@@ -94,7 +94,7 @@ Zwei Stolpersteine, nur durch echte Bedrock-Aufrufe gefunden — nicht aus der D
 | # | Fehler ohne den Fix | Ursache |
 |---|---|---|
 | ① | `Cannot use agenerate() with a synchronous client` | Ragas ruft Metriken immer async auf — der instructor-Client muss `async_client=True` sein |
-| ② | `temperature and top_p cannot both be specified` | Ragas' Default schickt beide Parameter; Bedrock-Claude akzeptiert nur einen — `top_p` nach dem Bauen löschen |
+| ② | `temperature and top_p cannot both be specified` | Ragas' Default schickt beide Parameter; Bedrock akzeptiert nur einen — `top_p` nach dem Bauen löschen |
 
 **Kein eigener Ragas-Bedrock-Adapter existiert** — der Weg führt über `instructor`, das Bedrock direkt unterstützt (`pip install instructor[bedrock]`).
 

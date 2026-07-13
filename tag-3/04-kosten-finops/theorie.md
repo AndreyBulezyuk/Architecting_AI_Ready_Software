@@ -39,7 +39,7 @@ Anknüpfen an die "überraschende Rechnung" aus Übung 01 (TravelMate). Heute ma
 <!--
 Tag 3 · Kapitel 04 · Folie 2/7 (Warum anders)
 
-Rückbezug auf Tag 3/01: Wir tracen bereits Tokens pro Call in Langfuse — FinOps ist kein neuer Datenstrom, sondern eine andere Auswertung derselben Traces. Und Langfuse rechnet die Kosten sogar automatisch aus (Kapitel 01, live gezeigt).
+Rückbezug auf Tag 3/01: Wir tracen bereits Tokens pro Call in Langfuse — FinOps ist kein neuer Datenstrom, sondern eine andere Auswertung derselben Traces. Und Langfuse rechnet die Kosten aus, sobald der Modellpreis hinterlegt ist (Kapitel 01 — bei den eu.-Profil-IDs braucht es eine eigene Model-Definition).
 -->
 
 ---
@@ -88,7 +88,7 @@ Live gemessen, gleiche Aufgabe (Support-Nachricht klassifizieren):
 <!--
 Tag 3 · Kapitel 04 · Folie 4/7 (Modell-Tiering)
 
-Die 10x-Zahl ist echt (tiering.py). Der Bogen schließt sich: T2/01 Router (wie), T3/02 Evaluation (Qualität messbar), T3/04 Kosten (Preis messbar) — zusammen die Entscheidungsgrundlage "billigstes Modell, das die Eval besteht".
+Die Tiering-Zahl ist echt gemessen (tiering.py). Der Bogen schließt sich: T2/01 Router (wie), T3/02 Evaluation (Qualität messbar), T3/04 Kosten (Preis messbar) — zusammen die Entscheidungsgrundlage "billigstes Modell, das die Eval besteht".
 -->
 
 ---

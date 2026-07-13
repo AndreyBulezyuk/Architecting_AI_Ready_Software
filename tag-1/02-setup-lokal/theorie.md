@@ -82,7 +82,7 @@ Auf das Profil hinweisen — bewusste Entscheidung, damit Tag 1 nicht 10 Contain
 
 ###### tag-1/02-setup-lokal · Tag 1 · Kapitel 02
 
-**Einordnung:** LocalStack ist eine legitime Option für Offline-Entwicklung und CI — wir zeigen es genau **einmal** (heute) und arbeiten ab Kapitel 03 direkt gegen AWS, weil der Wechsel zwischen zwei Umgebungen mehr Komplexität kostet, als die Emulation spart.
+**Einordnung:** LocalStack ist eine legitime Option für Offline-Entwicklung und CI — wir zeigen es genau **einmal** und arbeiten ab Kapitel 03 direkt gegen AWS.
 
 **Funktioniert (Community-Edition, unser Umfang):** S3, SQS, SNS, EventBridge (Rules/Targets), DynamoDB, Lambda, SSM — die APIs verhalten sich für unsere Zwecke wie AWS.
 
