@@ -30,13 +30,17 @@ def corpus() -> None:
 
 
 def test_agent_queries_the_database_via_mcp() -> None:
+    # Delete all 'T2C5Chunk' nodes and create 345 new 'T2C5Chunk'
+    store.delete_all_nodes("T2C5Chunk")
+    for i in range(345):
+        store.create_node("T2C5Chunk")
     result = ask(
-        "Wie viele T4Chunk-Knoten gibt es pro doc_id? Nutze die Neo4j-Tools."
+        "Zähle 'T2C5Chunk' Knoten. Nutze die Neo4j-Tools."
     )
     tools_used = list(result.metrics.tool_metrics)
+    print(result)
     assert any("cypher" in name or "neo4j" in name for name in tools_used), tools_used
-    assert "algarve" in str(result).lower()
-
+    assert "345" in str(result), result
 
 def test_agent_combines_own_tool_with_reports() -> None:
     result = ask(

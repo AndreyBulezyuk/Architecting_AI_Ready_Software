@@ -1,0 +1,92 @@
+"id","name","isFolder","parentId","query"
+"q01","00 Info · Labels & Nutzung dieser Sammlung","false","","// GraphRAG-Demo-Labels: T3Doc / T3Chunk / T3Entity ; Rels: PART_OF, MENTIONS.
+// Loesung nutzt T3UDoc/T3UChunk/T3UEntity, T2/04 nutzt T4Chunk. Fuer eigene Daten Labels anpassen.
+// Parametrisierte Queries brauchen vorher gesetzte Parameter, z.B.:  :param doc_id => 'madeira'
+RETURN 'Hinweise zur Nutzung stehen als Kommentar im jeweiligen Query-Text' AS info"
+"q02","01 Schema · Graph-Schema visualisieren","false","","CALL db.schema.visualization()"
+"q03","01 Schema · Knoten pro Label zaehlen","false","","MATCH (n)
+RETURN labels(n) AS labels, count(*) AS anzahl
+ORDER BY anzahl DESC"
+"q04","01 Schema · Beziehungen pro Typ zaehlen","false","","MATCH ()-[r]->()
+RETURN type(r) AS beziehung, count(*) AS anzahl
+ORDER BY anzahl DESC"
+"q05","01 Schema · Property-Keys auflisten","false","","CALL db.propertyKeys()"
+"q06","01 Schema · Alle Indizes anzeigen","false","","SHOW INDEXES"
+"q07","01 Schema · Vector-Indizes + Status","false","","SHOW VECTOR INDEXES YIELD name, labelsOrTypes, properties, state, populationPercent
+RETURN name, labelsOrTypes, properties, state, populationPercent"
+"q08","01 Schema · Constraints anzeigen","false","","SHOW CONSTRAINTS"
+"q09","02 GraphRAG · Dokumente mit Chunk- & Entity-Anzahl","false","","MATCH (d:T3Doc)
+OPTIONAL MATCH (d)<-[:PART_OF]-(c:T3Chunk)
+OPTIONAL MATCH (d)-[:MENTIONS]->(e:T3Entity)
+RETURN d.doc_id AS dokument, count(DISTINCT c) AS chunks, count(DISTINCT e) AS entities
+ORDER BY entities DESC"
+"q10","02 GraphRAG · Entity-Typen (Verteilung)","false","","MATCH (e:T3Entity)
+RETURN e.type AS typ, count(*) AS anzahl
+ORDER BY anzahl DESC"
+"q11","02 GraphRAG · Meist erwaehnte Entities (Hubs)","false","","MATCH (e:T3Entity)<-[:MENTIONS]-(d:T3Doc)
+RETURN e.name AS entity, e.type AS typ, count(DISTINCT d) AS dokumente
+ORDER BY dokumente DESC
+LIMIT 20"
+"q12","02 GraphRAG · Geteilte Entities = die Graph-Kanten","false","","MATCH (a:T3Doc)-[:MENTIONS]->(e:T3Entity)<-[:MENTIONS]-(b:T3Doc)
+WHERE a.doc_id < b.doc_id
+RETURN a.doc_id AS dok_a, b.doc_id AS dok_b,
+       count(DISTINCT e) AS gemeinsame, collect(DISTINCT e.name) AS entities
+ORDER BY gemeinsame DESC
+LIMIT 25"
+"q13","02 GraphRAG · Graph-Expansion ab einem Dokument","false","","// :param doc_id => 'madeira'   (oder $doc_id durch ein Literal ersetzen)
+MATCH (hit:T3Doc {doc_id: $doc_id})-[:MENTIONS]->(e:T3Entity)<-[:MENTIONS]-(related:T3Doc)
+WHERE related <> hit
+RETURN related.doc_id AS verwandtes_dokument,
+       count(DISTINCT e) AS staerke, collect(DISTINCT e.name) AS via_entities
+ORDER BY staerke DESC"
+"q14","02 GraphRAG · Dokumente zu einer Entity finden","false","","// :param entity => 'wandern'
+MATCH (e:T3Entity {name: $entity})<-[:MENTIONS]-(d:T3Doc)
+RETURN d.doc_id AS dokument
+ORDER BY dokument"
+"q15","02 GraphRAG · Gemeinsame Entities zweier Dokumente","false","","// :param doc_a => 'madeira'    :param doc_b => 'gardasee'
+MATCH (a:T3Doc {doc_id: $doc_a})-[:MENTIONS]->(e:T3Entity)<-[:MENTIONS]-(b:T3Doc {doc_id: $doc_b})
+RETURN e.name AS gemeinsame_entity, e.type AS typ"
+"q16","02 GraphRAG · Dokumente ohne Entities (Extraktion pruefen)","false","","MATCH (d:T3Doc)
+WHERE NOT (d)-[:MENTIONS]->(:T3Entity)
+RETURN d.doc_id AS dokument_ohne_entities"
+"q17","02 GraphRAG · Verwaiste Entities (von niemandem erwaehnt)","false","","MATCH (e:T3Entity)
+WHERE NOT (e)<-[:MENTIONS]-(:T3Doc)
+RETURN e.name AS entity, e.type AS typ"
+"q18","02 GraphRAG · Knowledge Graph visualisieren (Doc-Entity)","false","","MATCH p=(:T3Doc)-[:MENTIONS]->(:T3Entity)
+RETURN p
+LIMIT 300"
+"q19","03 Vektor · Chunks mit/ohne Embedding (stale-Erkennung)","false","","MATCH (c:T3Chunk)
+RETURN c.embedding IS NOT NULL AS hat_embedding, count(*) AS anzahl"
+"q20","03 Vektor · Embedding-Dimension pruefen","false","","MATCH (c:T3Chunk)
+WHERE c.embedding IS NOT NULL
+RETURN size(c.embedding) AS dimensionen
+LIMIT 1"
+"q21","03 Vektor · Aehnlichkeitssuche Top-k (Vector Index)","false","","// :param query_vector => [0.01, 0.02, ...]   (1024 floats, z.B. aus embed(frage))
+CALL db.index.vector.queryNodes('t3_chunk_embeddings', 5, $query_vector)
+YIELD node, score
+RETURN node.doc_id AS dokument, node.seq AS chunk, left(node.text, 120) AS auszug, score
+ORDER BY score DESC"
+"q22","03 Vektor · Chunks eines Dokuments anzeigen","false","","// :param doc_id => 'madeira'
+MATCH (c:T3Chunk {doc_id: $doc_id})
+RETURN c.seq AS seq, c.text AS text
+ORDER BY seq"
+"q23","04 Cleanup · [0] Vorschau: Knoten & Beziehungen zaehlen","false","","MATCH (n)
+OPTIONAL MATCH (n)-[r]->()
+RETURN count(DISTINCT n) AS knoten, count(r) AS beziehungen"
+"q24","04 Cleanup · [1] Alle Daten loeschen (kleine DB)","false","","MATCH (n) DETACH DELETE n"
+"q25","04 Cleanup · [1b] Alle Daten loeschen (grosse DB, batched/APOC)","false","","CALL apoc.periodic.iterate(
+  'MATCH (n) RETURN n',
+  'DETACH DELETE n',
+  {batchSize: 10000}
+)"
+"q26","04 Cleanup · [2] Alle Indizes anzeigen","false","","SHOW INDEXES"
+"q27","04 Cleanup · [3] DROP-Statements fuer ALLE Indizes erzeugen (inkl. Vector)","false","","// In Neo4j 5 laesst sich 'alle Indizes droppen' nicht in einem Statement machen.
+// Schritt 1: diese Query ausfuehren -> Spalte drop_statement liefert fertige DROP-Zeilen.
+// Schritt 2: die ausgegebenen Zeilen ausfuehren (droppt auch Vector-Indizes).
+SHOW INDEXES YIELD name, type
+WHERE type <> 'LOOKUP'
+RETURN 'DROP INDEX `' + name + '` IF EXISTS;' AS drop_statement"
+"q28","04 Cleanup · [3b] Einzelnen Vector-Index droppen (GraphRAG-Demo)","false","","DROP INDEX t3_chunk_embeddings IF EXISTS"
+"q29","04 Cleanup · [4] DROP-Statements fuer alle Constraints erzeugen","false","","// Wie [3]: erst ausfuehren, dann die ausgegebenen Zeilen laufen lassen.
+SHOW CONSTRAINTS YIELD name
+RETURN 'DROP CONSTRAINT `' + name + '` IF EXISTS;' AS drop_statement"
