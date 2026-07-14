@@ -55,7 +55,9 @@ Architektur-Relevanz betonen: Account-Grenzen sind das gröbste und stärkste Is
 
 ###### tag-1/03-setup-aws · Tag 1 · Kapitel 03
 
-1. Einladungs-Mail annehmen → Passwort + MFA setzen
+**IAM Identity Center** = AWS' Single-Sign-On-Dienst (SSO): ein Login für alle Accounts.
+
+1. Einladungs-Mail annehmen → Passwort + MFA (Multi-Faktor-Authentifizierung) setzen
 2. **Access Portal** öffnen → euer Account mit Rolle `TrainingAdmin` erscheint
 3. CLI koppeln:
 

@@ -98,6 +98,8 @@ Beide Modelle sind im Schulungskonto live getestet. Falls jemand fragt: cohere.e
 
 ###### tag-2/02-dokumentenpipeline-embeddings · Tag 2 · Kapitel 02
 
+**RAG** (Retrieval-Augmented Generation) = erst relevante Textstellen suchen, dann das LLM damit antworten lassen — statt es frei fabulieren zu lassen.
+
 ```mermaid
 sequenceDiagram
     participant U as Client

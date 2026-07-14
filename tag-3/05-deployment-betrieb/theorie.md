@@ -71,7 +71,7 @@ instance = ec2.Instance(self, "Neo4j",
 
 - **Derselbe Container wie im `docker-compose.yml`** — kein Cloud-Spezialfall, das "lokal = Cloud"-Prinzip aus Tag 1 zu Ende gedacht
 - **Kostenfallen vermieden** (Kosten-Radar!): `nat_gateways=0` + Public Subnet statt teurem NAT Gateway, `t4g.small` (ARM, ~0,50 $/Tag), Volume mit `delete_on_termination`
-- **Sicherheit in der Infrastruktur:** Bolt/Browser nur für die Teilnehmer-CIDR, **nie** `0.0.0.0/0` für eine DB — die Security Group, nicht die Hoffnung, schützt
+- **Sicherheit in der Infrastruktur:** Bolt/Browser nur für die Teilnehmer-CIDR (den erlaubten IP-Bereich), **nie** `0.0.0.0/0` für eine DB — die Security Group, nicht die Hoffnung, schützt
 
 <!--
 Tag 3 · Kapitel 05 · Folie 3/7 (IaC Neo4j)
@@ -109,7 +109,7 @@ Das ist der methodische Kern: Infrastruktur wird getestet wie Anwendungscode. De
 ###### tag-3/05-deployment-betrieb · Tag 3 · Kapitel 05
 
 - [Amazon Bedrock AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html): serverlose Laufzeit für Agenten — framework-agnostisch (Strands, LangGraph, …), kein Server-Betrieb
-- Deployment-Weg: Agent-Code wird als **arm64-Container** paketiert, nach **ECR** gepusht, AgentCore Runtime hostet ihn und bietet einen Invoke-Endpoint — der Build läuft über CodeBuild (kein lokales Docker nötig)
+- Deployment-Weg: Agent-Code wird als **arm64-Container** paketiert, nach **ECR** (Elastic Container Registry) gepusht, AgentCore Runtime hostet ihn und bietet einen Invoke-Endpoint — der Build läuft über CodeBuild (kein lokales Docker nötig)
 - Werkzeug: die [AgentCore CLI](https://github.com/aws/agentcore-cli) (`@aws/agentcore`) ist der aktuell empfohlene Weg (löst das ältere Starter-Toolkit ab)
 - **Ehrlich, was wir hier NICHT tun:** Wir deployen den Agenten in dieser Schulung **nicht** live — AgentCore Observability ist noch **Preview** (Tag 3/01), und der volle Deploy-Zyklus sprengt das Kapitel. Der Strands-Agent aus T2/05 ist deploy-**fähig**, den Deploy führt ihr nach der Schulung mit der CLI aus
 

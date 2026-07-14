@@ -57,7 +57,7 @@ with tracer.start_as_current_span("rag.answer") as span:
     span.set_attribute("gen_ai.usage.output_tokens", usage["outputTokens"])
 ```
 
-- [OTel GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/): standardisierte Attributnamen für LLM-Aufrufe — **Status: experimental**, Namen können sich noch ändern
+- **OpenTelemetry (OTel)** = offener Standard für Telemetrie; die [GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) geben standardisierte Attributnamen für LLM-Aufrufe vor — **Status: experimental**, Namen können sich noch ändern
 - Kernattribute: `gen_ai.system` (Anbieter), `gen_ai.request.model`, `gen_ai.usage.input_tokens`/`output_tokens`, `gen_ai.operation.name`
 - Der Sinn: **ein** Vokabular, das jedes OTel-fähige Backend versteht — kein proprietäres SDK für jedes Tool
 
@@ -79,7 +79,9 @@ flowchart LR
     L --> UI[Trace-Baum\nModell, Tokens, Kosten]
 ```
 
-**Verifiziert gegen die lokale Langfuse-Instanz** (nicht nur Dokumentation — live getestet):
+**OTLP** (OpenTelemetry Protocol) = das Transportformat, über das ein OTel-SDK seine Traces an ein Backend schickt; Langfuse nimmt es direkt an.
+
+**Verifiziert gegen die lokale Langfuse-Instanz:**
 
 | Span-Attribut | Wirkung in Langfuse |
 |---|---|
@@ -132,7 +134,7 @@ Alle Werte in der Tabelle sind einzeln gegen die lokale Langfuse-Instanz geteste
 ###### tag-3/01-observability · Tag 3 · Kapitel 01
 
 - [Amazon Bedrock AgentCore Observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability.html): Agents, die auf **AgentCore Runtime** laufen, senden Telemetrie automatisch — Dashboards für Sessions, Latenz, Tokens, Fehlerraten
-- Format ist **OTel-kompatibel**: Agents außerhalb von AgentCore Runtime brauchen das [ADOT SDK](https://aws-otel.github.io/) oder den AWS-Lambda-OTel-Layer
+- Format ist **OTel-kompatibel**: Agents außerhalb von AgentCore Runtime brauchen das [ADOT SDK](https://aws-otel.github.io/) (AWS Distro for OpenTelemetry) oder den AWS-Lambda-OTel-Layer
 - Ziel-UI: **CloudWatch GenAI Observability** Dashboard, Tab "Bedrock AgentCore" — **Stand Juli 2026: Preview**, API und Layout können sich ändern
 - Einmaliges Setup pro Account: **Transaction Search** in CloudWatch aktivieren (~10 Minuten bis Spans durchsuchbar sind)
 

@@ -114,7 +114,7 @@ Nicht vertiefen — nur benennen, damit die Begriffe im Raum sind, wenn das DS-T
 
 <br>
 
-**Die Abkürzung, die wir nehmen:** Mit **Bedrock** konsumieren wir Foundation Models als API — Training, Serving, Skalierung und GPU-Betrieb sind AWS' Problem, nicht unseres.
+**Die Abkürzung, die wir nehmen:** Mit **Bedrock** konsumieren wir Foundation Models (für Text: **Large Language Models, LLMs**) als API — Training, Serving, Skalierung und GPU-Betrieb sind AWS' Problem, nicht unseres.
 
 <!--
 Tag 1 · Kapitel 01 · Folie 5/10 (Werkzeugkasten MLOps)

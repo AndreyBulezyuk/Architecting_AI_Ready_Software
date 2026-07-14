@@ -1,11 +1,11 @@
 # Übung 03 — Eigener Account, eigener Stack, erster LLM-Call
 
-**Ziel:** SSO-Zugang eingerichtet, eigenen CDK-Stack deployt (mit 2 Ressourcen mehr als die Demo) und den ersten Bedrock-Aufruf gemacht.
+**Ziel:** SSO-Zugang (Single Sign-On) eingerichtet, eigenen CDK-Stack deployt (mit 2 Ressourcen mehr als die Demo) und den ersten Bedrock-Aufruf gemacht.
 **Zeit:** ~75 min einzeln. **Voraussetzung:** Einladungs-Mail vom Identity Center ist angekommen.
 
 ## Teil 1 — Zugang (≈15 min)
 
-1. Einladung annehmen, Passwort + MFA setzen, im Access Portal euren Account öffnen.
+1. Einladung annehmen, Passwort + MFA (Multi-Faktor-Authentifizierung) setzen, im Access Portal euren Account öffnen.
 2. CLI koppeln: `aws configure sso` (Start-URL + Region nennt der Trainer), dann:
 
    ```bash
@@ -22,7 +22,7 @@ Baut auf der Demo auf, aber erweitert sie. Erstellt in eurem Projekt einen Stack
 
 1. **S3-Bucket** wie in der Demo (`infrastructure/stacks/base_stack.py` als Vorlage).
 2. **Neu: SQS-Queue** `ai-jobs` **mit Dead-Letter-Queue**: Nachrichten sollen nach 3 fehlgeschlagenen Empfängen in die DLQ wandern. **Recherche:** Wie heißt das Konstrukt-Argument? ([aws_sqs.Queue-Doku](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_sqs/Queue.html))
-3. **Neu: SSM-Parameter** `/training/participant/queue-url` mit der Queue-URL.
+3. **Neu: SSM-Parameter** (AWS Systems Manager Parameter Store) `/training/participant/queue-url` mit der Queue-URL.
 4. `cdk bootstrap` (einmalig), dann `cdk diff` **lesen** und erst dann `cdk deploy`.
 5. Beweis: schickt mit `aws sqs send-message` eine Nachricht und lest sie mit `receive-message` wieder aus.
 

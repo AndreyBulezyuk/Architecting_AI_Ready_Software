@@ -30,7 +30,7 @@ Anknüpfen an Übung 01: Der TravelMate-Prototyp ist an synchronen LLM-Calls ges
 |---|---|
 | **Langsam** (Sekunden, nicht Millisekunden) | Nutzer-Request nicht blockieren → Queue dazwischen |
 | **Teuer** (pro Token bezahlt) | Peaks glätten (Load Leveling), Batching ermöglichen |
-| **Fehleranfällig** (Throttling, Timeouts, Quotas) | Retry mit Backoff; nach n Versuchen → [DLQ](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html) |
+| **Fehleranfällig** (Throttling, Timeouts, Quotas) | Retry mit Backoff; nach n Versuchen → [DLQ](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html) (Dead-Letter-Queue, Auffangqueue) |
 | **Nichtdeterministisch** | Verarbeitung protokollieren, Ergebnis validieren |
 
 **Faustregel:** synchron nur, wenn ein Mensch aktiv auf die Antwort wartet (Chat) — alles andere (Anreicherung, Zusammenfassung, Embeddings, Profile) läuft **event-getrieben im Hintergrund**.
@@ -49,8 +49,8 @@ Diskussionsfrage in den Raum: "Welche eurer geplanten KI-Features brauchen wirkl
 
 | Baustein | Modell | Nimm es für … |
 |---|---|---|
-| [SQS](https://docs.aws.amazon.com/sqs/) | Queue (Pull, 1 Consumer-Gruppe) | Arbeit puffern, Retry/DLQ, genau **ein** Verarbeiter-Typ |
-| [SNS](https://docs.aws.amazon.com/sns/) | Topic (Push, Fan-out) | Gleiches Signal an viele Abnehmer, auch E-Mail/SMS |
+| [SQS](https://docs.aws.amazon.com/sqs/) (Simple Queue Service) | Queue (Pull, 1 Consumer-Gruppe) | Arbeit puffern, Retry/DLQ, genau **ein** Verarbeiter-Typ |
+| [SNS](https://docs.aws.amazon.com/sns/) (Simple Notification Service) | Topic (Push, Fan-out) | Gleiches Signal an viele Abnehmer, auch E-Mail/SMS |
 | [EventBridge](https://docs.aws.amazon.com/eventbridge/) | Event-Bus mit **Regeln & Filtern** | Domänen-Events routen: "wer sich interessiert, abonniert per Rule" |
 
 ```mermaid

@@ -88,7 +88,7 @@ CALL db.index.vector.queryNodes('document_embeddings', 5, $queryVector)
 YIELD node, score RETURN node.id, node.title ORDER BY score DESC;
 ```
 
-- **Top-k-Suche** (`queryNodes(index, k, vector)`): die `k` Knoten, deren Embeddings dem Query-Vektor am nächsten sind. Der Index nutzt eine vorab gebaute Nachbarschaftsstruktur (ANN) statt alle Vektoren durchzurechnen — schnell auch bei Millionen Knoten.
+- **Top-k-Suche** (`queryNodes(index, k, vector)`): die `k` Knoten, deren Embeddings dem Query-Vektor am nächsten sind. Der Index nutzt eine vorab gebaute Nachbarschaftsstruktur (ANN, Approximate Nearest Neighbor) statt alle Vektoren durchzurechnen — schnell auch bei Millionen Knoten.
 - **`score` ist Ähnlichkeit** (größer = besser) — kein Distanzoperator wie bei pgvector/SQL
 - Index-Aufbau läuft **asynchron**: nach Schreib-Bursts `CALL db.awaitIndexes()`; `SHOW VECTOR INDEXES` zeigt `state` (`POPULATING` → `ONLINE`/`FAILED`) und `populationPercent` — Neo4j pflegt beides selbst
 - Dimension und Similarity-Funktion (`cosine`/`euclidean`) sind **fix pro Index** — Modellwechsel mit anderer Dimension heißt: neuer Index (passt zur Lifecycle-Folie)

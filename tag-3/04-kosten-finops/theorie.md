@@ -59,7 +59,7 @@ system=[{"text": KNOWLEDGE_BASE},          # großer, stabiler Prefix
 | In der Demo gemessen | voller Preis | **~10 % der Kosten** |
 
 - **Breakeven ~30 %:** Wird derselbe Prefix in unter ~30 % der Anfragen wiederverwendet, kosten die 1,25×-Writes mehr, als die Reads sparen ([Prompt Caching Doku](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html))
-- TTL: **5 Minuten** (Default) oder **1 Stunde** (seit Jan 2026, Write dann 2×) — ideal für einen stabilen System-Prompt/Kontext, der über viele Anfragen gleich bleibt
+- TTL (Time To Live, Cache-Lebensdauer): **5 Minuten** (Default) oder **1 Stunde** (seit Jan 2026, Write dann 2×) — ideal für einen stabilen System-Prompt/Kontext, der über viele Anfragen gleich bleibt
 - **Falle:** `inputTokens` in `usage` schließt Cache-Tokens **aus** — wer nur die summiert, unterschätzt die Rechnung
 
 <!--

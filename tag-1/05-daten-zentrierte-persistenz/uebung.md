@@ -6,7 +6,7 @@
 **Begriffe für diese Übung:**
 
 - **`stale`** (dt. "veraltet"): Die Quelle in S3 wurde geändert, aber das Embedding in Neo4j ist noch der alte Stand — bis zum Re-Embed fliegt das Dokument aus den Suchtreffern.
-- **Top-k-Suche**: "Gib mir die `k` ähnlichsten Knoten zum Query-Vektor." Der Index nutzt eine vorab aufgebaute Nachbarschaftsstruktur (ANN), statt alle Vektoren zu vergleichen — schnell auch bei großen Beständen.
+- **Top-k-Suche**: "Gib mir die `k` ähnlichsten Knoten zum Query-Vektor." Der Index nutzt eine vorab aufgebaute Nachbarschaftsstruktur (ANN, Approximate Nearest Neighbor), statt alle Vektoren zu vergleichen — schnell auch bei großen Beständen.
 - **`state` / `populationPercent`** (aus `SHOW VECTOR INDEXES`): pflegt Neo4j **automatisch** — `state` ist der Index-Lebenszyklus (`POPULATING` → `ONLINE`, im Fehlerfall `FAILED`), `populationPercent` der Fortschritt des Index-Aufbaus in Prozent. Ihr berechnet hier nichts selbst, ihr lest nur ab.
 
 ## Teil 1 — Nachziehen (≈10 min)

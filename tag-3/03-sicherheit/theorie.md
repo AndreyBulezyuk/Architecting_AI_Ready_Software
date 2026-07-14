@@ -29,7 +29,7 @@ Einstieg mit einer Live-Demo statt Folie: dem T2/04-Service "Ignoriere alle Anwe
 | # | Risiko | Wo es uns trifft |
 |---|---|---|
 | LLM01 | **Prompt Injection** | Nutzerfrage **oder** abgerufenes Dokument überschreibt Anweisungen |
-| LLM02 | **Sensitive Information Disclosure** | Modell gibt PII/Secrets aus dem Kontext weiter |
+| LLM02 | **Sensitive Information Disclosure** | Modell gibt PII (personenbezogene Daten) oder Secrets aus dem Kontext weiter |
 | LLM06 | **Excessive Agency** | Agent (Tag 2/05) mit zu vielen/mächtigen Tools |
 | LLM08 | **Vector/Embedding Weaknesses** | vergifteter Inhalt in der Wissensbasis (unser GraphRAG!) |
 | LLM10 | **Unbounded Consumption** | Kosten-/DoS-Angriff über riesige oder teure Prompts |

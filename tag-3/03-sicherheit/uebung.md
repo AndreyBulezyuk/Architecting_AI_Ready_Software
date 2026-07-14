@@ -7,6 +7,7 @@
 
 - **Prompt Injection (direkt/indirekt)**: Direkt = die Anweisung steht in der Nutzerfrage. Indirekt = sie steckt in einem **abgerufenen Dokument**, das der Nutzer gar nicht sieht — der gefährlichere Fall für RAG-Systeme.
 - **`apply_guardrail`**: Prüft beliebigen Text gegen einen Guardrail **ohne** Modell-Aufruf — im Gegensatz zum `converse`-Guardrail, der nur den fertigen Prompt am Antwort-Call sieht.
+- **PII** (Personally Identifiable Information): personenbezogene Daten wie Name, E-Mail, Telefonnummer oder Kartennummer, die ein Guardrail anonymisieren oder blocken kann.
 
 ## Teil 1 — Nachziehen (≈15 min)
 

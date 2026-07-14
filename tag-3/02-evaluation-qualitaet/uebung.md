@@ -14,20 +14,32 @@ Demo-Tests + `uv run python evaluate.py` ausführen. Verändert **eine** Referen
 
 ## Teil 2 — Baseline vs. GraphRAG selbst messen (≈45 min)
 
-Baut euer eigenes Vergleichsprojekt (Vorlage: T2/03-Demo für den 5-Dokumente-Korpus mit `madeira`/`gardasee`):
+Vorlage: die T2/03-Demo (5-Dokumente-Korpus mit `madeira`/`gardasee`). Vier Schritte, jeder mit klarem Ziel:
 
-1. Übernehmt `kg.py`/`graphrag.py` aus eurer T2/03-Lösung (oder der Demo) — **eigene Neo4j-Labels** wählen, sonst kollidiert ihr mit bereits vorhandenen Daten in der geteilten lokalen Neo4j.
-2. Schreibt `baseline_answer(question, k)`: dieselbe Retrieval-Funktion wie GraphRAG, aber **ohne** `graph_expansion()` — nur `vector_hits()`. Das ist eure faire Baseline (gleiches Embedding-Modell, gleicher Prompt, gleiches `k` wie GraphRAG).
-3. Stellt einen kleinen Fragenkatalog mit Referenzantworten zusammen (3–4 Fragen zum 5-Dokumente-Korpus) — nutzt gern eure Fragen aus der T2/03-Abschlussrunde.
-4. Bewertet **beide** Antwort-Pfade mit **denselben** Ragas-Metrik-Instanzen (ein `Faithfulness`, ein `ContextPrecision`, ein `ContextRecall` — nicht für jeden Pfad neue Instanzen bauen, sonst ist der Vergleich nicht fair).
+**Schritt 1 — Ziel:** `kg.py`/`graphrag.py` aus eurer T2/03-Lösung (oder der Demo) übernehmen und den Graphen aufbauen.
+**Schritt 1 — Tipp:** Wählt **eigene Neo4j-Labels** (z. B. `EvalDoc`), sonst kollidiert ihr mit bereits vorhandenen Daten in der geteilten Neo4j.
 
-**Schreibt euer Ergebnis auf, bevor ihr weiterlest.** Gewinnt GraphRAG? Verliert es? Unentschieden?
+**Schritt 2 — Ziel:** Eine faire Baseline bauen — `baseline_answer(question, k)` nutzt dasselbe Retrieval wie GraphRAG, aber **ohne** `graph_expansion()`.
+**Schritt 2 — Tipp:** Nur `vector_hits()` aufrufen und denselben Prompt, dasselbe Embedding-Modell und dasselbe `k` wie GraphRAG verwenden — sonst vergleicht ihr zwei Änderungen auf einmal.
+
+**Schritt 3 — Ziel:** Einen kleinen Prüf-Datensatz zusammenstellen — 3–4 Fragen mit je einer Referenzantwort.
+**Schritt 3 — Tipp:** Nehmt die Fragen aus eurer T2/03-Abschlussrunde; die Referenzantwort ist die „richtige" Antwort, gegen die Ragas misst.
+
+**Schritt 4 — Ziel:** Beide Pfade mit Ragas bewerten und die Zahlen vergleichen.
+**Schritt 4 — Tipp:** Für beide Pfade **dieselben** Metrik-Instanzen benutzen (ein `Faithfulness`, ein `ContextPrecision`, ein `ContextRecall`) — neue Instanzen pro Pfad verfälschen den Vergleich. Siehe [Ragas Metrics](https://docs.ragas.io/en/stable/concepts/metrics/).
+
+**Schreibt euer Ergebnis auf, bevor ihr weiterlest.** Gewinnt GraphRAG, verliert es, oder ist es unentschieden?
 
 ## Teil 3 — Warum, und wann wäre es anders? (≈30 min)
 
-1. Schaut euch für eine Frage den **Kontext** beider Pfade konkret an (`context`-Liste, nicht nur den Score): Wie viele Dokumente holt die Baseline mit `k=3` bei nur 5 Dokumenten im Korpus insgesamt? Was bedeutet das für den Spielraum, den die Graph-Expansion überhaupt noch hat?
-2. **Experiment:** Setzt `k=1` für **beide** Pfade (Baseline UND GraphRAG-Einstieg) und wiederholt die Messung. Ändert sich der Abstand zwischen Baseline und GraphRAG? Warum sollte `k` das Ergebnis überhaupt beeinflussen?
-3. Konstruiert **eine** neue Frage, bei der ihr **vorher begründet erwartet**, dass nur GraphRAG sie vollständig beantworten kann (Tipp: eine Antwort, die Fakten aus zwei Dokumenten kombiniert, die bei `k=1` oder `k=2` **nicht beide** unter den Top-Treffern wären). Messt nach — hattet ihr recht?
+**Schritt 1 — Ziel:** Verstehen, warum der Unterschied klein sein kann — den tatsächlichen `context` beider Pfade ansehen (nicht nur den Score).
+**Schritt 1 — Tipp:** Zählt, wie viele Dokumente die Baseline mit `k=3` bei nur 5 Dokumenten im Korpus schon holt. Viel Spielraum bleibt der Graph-Expansion dann nicht.
+
+**Schritt 2 — Ziel:** Den Effekt von `k` messen — `k=1` für **beide** Pfade setzen und die Bewertung aus Teil 2 wiederholen.
+**Schritt 2 — Tipp:** Vergleicht den Abstand Baseline↔GraphRAG bei `k=1` mit dem bei `k=3`. Je kleiner `k`, desto mehr muss die Graph-Expansion leisten.
+
+**Schritt 3 — Ziel:** Einen Fall konstruieren, in dem GraphRAG gewinnen **muss**, und die Vorhersage prüfen.
+**Schritt 3 — Tipp:** Baut eine Frage, deren Antwort Fakten aus **zwei** Dokumenten kombiniert, die bei `k=1`/`k=2` nicht beide unter den Top-Treffern wären. Erst begründen, was ihr erwartet — dann messen.
 
 ## Abschlussfragen
 

@@ -16,7 +16,7 @@ Demo ausführen (`pytest`, `npx cdk synth Neo4j`). Lest das synthetisierte Templ
 
 Nehmt den Demo-Stack als Vorlage und fügt **drei** Dinge hinzu — **jedes mit einem eigenen Assertions-Test**:
 
-1. **Verschlüsseltes Volume**: EBS-Volume mit `encrypted=True`. Beweist per Assertion, dass `Encrypted: true` im Template steht.
+1. **Verschlüsseltes Volume**: EBS-Volume (Elastic Block Store, die Festplatte der EC2-Instanz) mit `encrypted=True`. Beweist per Assertion, dass `Encrypted: true` im Template steht.
 2. **SSM Session Manager statt SSH**: Hängt der Instanz eine IAM-Role mit der Managed Policy `AmazonSSMManagedInstanceCore` an. Beweist (a) die Rolle hat die Policy und (b) **Port 22 ist nicht offen** (negativer Test — die Abwesenheit eines Fehlers beweisen).
 3. **Zweiter SSM-Parameter**: `/training/neo4j/browser-url` mit der HTTP-URL. Beweist, dass beide Parameter existieren.
 
