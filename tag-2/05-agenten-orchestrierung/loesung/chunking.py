@@ -25,7 +25,7 @@ def chunk_text(text: str, max_chars: int, overlap_chars: int) -> list[str]:
         # a single paragraph longer than max_chars gets hard-split
         while len(current) > max_chars:
             chunks.append(current[:max_chars])
-            current = current[max_chars - overlap_chars:] if overlap_chars else current[max_chars:]
+            current = current[max_chars - overlap_chars :] if overlap_chars else current[max_chars:]
     if current:
         chunks.append(current)
     return chunks

@@ -120,7 +120,7 @@ flowchart LR
 
 ```python
 neo4j_mcp = MCPClient(lambda: stdio_client(StdioServerParameters(
-    command="uvx", args=["mcp-neo4j-cypher"], env={...})))
+    command="uvx", args=["mcp-neo4j-cypher", "--schema-sample-size", "1000"], env={...})))
 with neo4j_mcp:                                    # Session offen halten!
     agent = Agent(model=model, tools=[*own_tools, *neo4j_mcp.list_tools_sync()])
 ```

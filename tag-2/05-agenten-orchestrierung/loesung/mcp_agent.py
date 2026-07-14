@@ -23,11 +23,24 @@ SYSTEM_PROMPT_V2 = """Du bist Reise-Assistent von TravelMate mit Datenbank-Zugri
 Für inhaltliche Fragen zu Reisezielen nutze search_travel_reports.
 Für Struktur- und Zahlenfragen (wie viele, welche Knoten, Statistik) nutze die
 Neo4j-Tools: erst das Schema holen, dann NUR lesende Cypher-Queries ausführen.
+Domänenwissen: Reiseberichte liegen als Chunk-Knoten in der Datenbank; deren
+Eigenschaft doc_id ist das Reiseziel. Es gibt keine separaten Reiseziel-Knoten.
 Antworte knapp, auf Deutsch. Erfinde nichts, was die Tools nicht liefern."""
 
-SEASONS = {12: "winter", 1: "winter", 2: "winter", 3: "frühling", 4: "frühling",
-           5: "frühling", 6: "sommer", 7: "sommer", 8: "sommer",
-           9: "herbst", 10: "herbst", 11: "herbst"}
+SEASONS = {
+    12: "winter",
+    1: "winter",
+    2: "winter",
+    3: "frühling",
+    4: "frühling",
+    5: "frühling",
+    6: "sommer",
+    7: "sommer",
+    8: "sommer",
+    9: "herbst",
+    10: "herbst",
+    11: "herbst",
+}
 
 
 @tool
@@ -42,16 +55,23 @@ def current_season(month: int) -> str:
 
 def neo4j_mcp_client() -> MCPClient:
     """Official Neo4j MCP server as a uvx subprocess (read access for the agent)."""
-    return MCPClient(lambda: stdio_client(StdioServerParameters(
-        command="uvx",
-        args=["mcp-neo4j-cypher"],
-        env={
-            "NEO4J_URI": settings.neo4j_uri,
-            "NEO4J_USERNAME": settings.neo4j_user,
-            "NEO4J_PASSWORD": settings.neo4j_password,
-            "PATH": os.environ.get("PATH", ""),
-        },
-    )))
+    # --schema-sample-size is required: without it mcp-neo4j-cypher 0.6.0 leaves the
+    # sample size at None and get_neo4j_schema builds an invalid query
+    # (CALL apoc.meta.schema({sample: None}) -> Cypher SyntaxError).
+    return MCPClient(
+        lambda: stdio_client(
+            StdioServerParameters(
+                command="uvx",
+                args=["mcp-neo4j-cypher", "--schema-sample-size", "1000"],
+                env={
+                    "NEO4J_URI": settings.neo4j_uri,
+                    "NEO4J_USERNAME": settings.neo4j_user,
+                    "NEO4J_PASSWORD": settings.neo4j_password,
+                    "PATH": os.environ.get("PATH", ""),
+                },
+            )
+        )
+    )
 
 
 def ask(question: str) -> Any:

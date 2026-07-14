@@ -30,17 +30,20 @@ def corpus() -> None:
 
 
 def test_agent_queries_the_database_via_mcp() -> None:
-    # Delete all 'T2C5Chunk' nodes and create 345 new 'T2C5Chunk'
+    # Seed exactly 345 bare 'T2C5Chunk' nodes; the agent has to count them via Cypher.
     store.delete_all_nodes("T2C5Chunk")
-    for i in range(345):
-        store.create_node("T2C5Chunk")
-    result = ask(
-        "Zähle 'T2C5Chunk' Knoten. Nutze die Neo4j-Tools."
-    )
-    tools_used = list(result.metrics.tool_metrics)
-    print(result)
-    assert any("cypher" in name or "neo4j" in name for name in tools_used), tools_used
-    assert "345" in str(result), result
+    store.create_nodes("T2C5Chunk", 345)
+    try:
+        result = ask("Zähle 'T2C5Chunk' Knoten. Nutze die Neo4j-Tools.")
+        tools_used = list(result.metrics.tool_metrics)
+        print(result)
+        assert any("cypher" in name or "neo4j" in name for name in tools_used), tools_used
+        assert "345" in str(result), result
+    finally:
+        # Clean up: leftover property-less nodes would pollute the schema that
+        # get_neo4j_schema reports in later runs (agent then misreads the graph).
+        store.delete_all_nodes("T2C5Chunk")
+
 
 def test_agent_combines_own_tool_with_reports() -> None:
     result = ask(

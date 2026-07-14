@@ -37,4 +37,5 @@ Agent-as-Tool: Verpackt euren Demo-Agenten als `@tool` eines zweiten Agenten ("C
 
 - `temperature=0.0` fürs Testen; `callback_handler=None` hält stdout sauber.
 - Der erste `uvx mcp-neo4j-cypher`-Start lädt das Paket herunter (~1 min) — einmalig.
+- Startet den Server mit `--schema-sample-size 1000`. Ohne diesen Wert baut `mcp-neo4j-cypher` 0.6.0 das Schema-Tool mit `sample: None` und Neo4j wirft einen Cypher-`SyntaxError`.
 - Lösung in `loesung/` — erst nach eigenem Versuch.

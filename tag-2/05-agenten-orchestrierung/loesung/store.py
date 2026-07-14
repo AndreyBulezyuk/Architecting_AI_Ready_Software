@@ -80,10 +80,16 @@ def search(query: str, k: int = 3) -> list[Hit]:
         ).records
     return [Hit(r["doc_id"], r["seq"], r["text"], float(r["score"])) for r in records]
 
+
 def delete_all_nodes(label: str) -> None:
     with driver() as neo4j:
-        neo4j.execute_query(f"MATCH (n:{label}) DETACH DELETE n")
+        neo4j.execute_query(cast(LiteralString, f"MATCH (n:{label}) DETACH DELETE n"))
 
-def create_node(label: str) -> None:
+
+def create_nodes(label: str, count: int) -> None:
+    """Create `count` empty nodes in one batched query (test helper)."""
     with driver() as neo4j:
-        neo4j.execute_query(f"CREATE (n:{label})")
+        neo4j.execute_query(
+            cast(LiteralString, f"UNWIND range(1, $count) AS _ CREATE (:{label})"),
+            count=count,
+        )
