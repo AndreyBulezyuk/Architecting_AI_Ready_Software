@@ -15,6 +15,7 @@ from langfuse_api import observations_for_trace, traces_by_tag
 from sample_docs import SAMPLE_DOCS
 from traced_assistant import ask
 from tracing import flush
+from strands.agent import AgentResult
 
 
 def _aws_available() -> bool:
@@ -48,7 +49,7 @@ def test_agent_run_is_traced_without_manual_spans() -> None:
     tag = f"test-{uuid.uuid4()}"
     session_id = f"sess-{uuid.uuid4()}"
 
-    result = ask(
+    result: AgentResult = ask(
         "Wohin für eine anstrengende Hüttentour mit Übernachtung?",
         session_id=session_id,
         tags=[tag],
@@ -66,3 +67,4 @@ def test_agent_run_is_traced_without_manual_spans() -> None:
     assert types.get("invoke_agent Strands Agents") == "AGENT"
     assert types.get("search_travel_reports") == "TOOL"
     assert "GENERATION" in types.values()
+    assert "alpen" in str(result).lower()

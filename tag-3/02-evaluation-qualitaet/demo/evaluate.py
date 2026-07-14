@@ -58,10 +58,11 @@ def evaluate_baseline() -> list[EvalResult]:
 def print_report(results: list[EvalResult]) -> None:
     for result in results:
         print(
-            f"{result.question}\n"
+            f"----{result.question}----\n"
+            f"Antwort: {rag.answer(result.question).text}\n"
             f"  faithfulness={result.faithfulness:.2f}  "
             f"context_precision={result.context_precision:.2f}  "
-            f"context_recall={result.context_recall:.2f}"
+            f"context_recall={result.context_recall:.2f}\n___\n\n"
         )
     n = len(results)
     print(
